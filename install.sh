@@ -31,7 +31,7 @@ EOF
 
 chmod +x /usr/local/bin/clear_stuck_pods.sh
 
-(crontab -l 2>/dev/null; echo "# clear_stuck_pods v1.0
+(crontab -l 2>>/dev/null; echo "# clear_stuck_pods v1.0
 # This cron job runs every 30 minutes and executes the clear_stuck_pods script to remove pods stuck in a terminating or error state.
 # Log location: /var/log/clear-stuck-pods.log
 # 30 minutes was choose to avoid hitting normally terminating pods and so that a node can return before a pod will be bounced.
