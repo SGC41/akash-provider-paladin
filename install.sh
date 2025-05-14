@@ -9,7 +9,7 @@ echo "Cloning or updating the Akash Provider Paladin repository..."
 if [ ! -d "akash-provider-paladin" ]; then
   git clone -b "$BRANCH" "$REPO"
 else
-  cd akash-provider-paladin
+  cd ~/akash-provider-paladin
   echo "Pulling latest changes from branch $BRANCH..."
   git fetch origin "$BRANCH"
   git reset --hard "origin/$BRANCH"
