@@ -6,5 +6,5 @@ metadata:
   labels:
     app: {{ include "akash-provider-paladin.name" . }}
 data:
-  clear_suck_pods.sh: |-
+  clear_stuck_pods.sh: |-
     {{ (.Files.Get "scripts/clear_stuck_pods.sh") | indent 4 }}
