@@ -17,7 +17,7 @@ curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/dev/in
 Uninstall Paladin v1
 
 ```shell
-curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/dev/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/dev/uninstall-v1.sh | sh
 ```
 
 Manual install.
