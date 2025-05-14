@@ -14,6 +14,11 @@ Installation simply run the curl command from a single control plane node.
 ```shell
 curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/dev/install.sh | sh
 ```
+Uninstall Paladin v1
+
+```shell
+curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/dev/install.sh | sh
+```
 
 Manual install.
 go figure.... basically just follow the script... if it works... :P
