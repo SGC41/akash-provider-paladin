@@ -1,0 +1,8 @@
+namespace: akash-services
+
+image:
+  repository: bitnami/kubectl
+  tag: latest
+  pullPolicy: IfNotPresent
+
+scriptPath: "/etc/scripts/clear_stuck_pods.sh"

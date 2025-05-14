@@ -1,0 +1,6 @@
+apiVersion: v2
+name: akash-provider-paladin
+description: A Helm chart for Akash Provider Paladin using a StatefulSet for stable pod naming.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

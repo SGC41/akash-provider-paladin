@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: akash-provider-paladin-script
+  namespace: {{ .Values.namespace | default "akash-services" }}
+  labels:
+    app: {{ include "akash-provider-paladin.name" . }}
+data:
+  clear_suck_pods.sh: |-
+    {{ (.Files.Get "scripts/clear_suck_pods.sh") | indent 4 }}
