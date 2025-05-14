@@ -1,0 +1,40 @@
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore build and temp files
+*.log
+*.out
+*.tmp
+*.swp
+*.bak
+
+# Ignore dependency caches
+node_modules/
+venv/
+__pycache__/
+
+# Ignore Helm & Kubernetes files
+*.tgz
+chart.lock
+values.lock
+helm-release.yaml
+.kube/
+.kubeconfig
+
+# Ignore sensitive files (adjust as needed)
+.env
+secrets.yaml
+*.crt
+*.key
+*.pem
+
+# Ignore editor/project files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Ignore Git itself
+.gitignore
+.gitmodules
