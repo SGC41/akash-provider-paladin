@@ -17,7 +17,7 @@ else
 fi
 
 # Change into the cloned repo directory
-cd akash-provider-paladin
+cd ~/akash-provider-paladin
 
 echo "Installing or upgrading Helm chart..."
 # --create-namespace ensures that the target namespace will be created if it doesn't exist
