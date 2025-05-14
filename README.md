@@ -10,5 +10,5 @@ Now runs its own pod called akash-provider-paladin
 
 Installation simply run the curl command from a single control plane node.
 ```shell
-curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/refs/heads/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/dev/install.sh | sh
 ```
