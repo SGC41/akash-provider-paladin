@@ -5,9 +5,10 @@ This script solves the issue with pods getting stuck on down nodes.
 Which can lead to provider downtime, persistent storage crashes and many other issues.
 Lists all terminating and error state pods across all namespaces and deletes them every 30 minutes.
 
-Now runs its own pod called akash-provider-paladin, which cannot get stuck and handles the deletions.
+Now runs its own pod called akash-provider-paladin, which cannot get stuck and handles the stuck pod checks and deletions.
+100% cluster support.
 
-
+will be adding more features soon.
 
 Installation simply run the curl command from a single control plane node.
 ```shell
