@@ -5,7 +5,7 @@ metadata:
   name: akash-provider-paladin-script
   namespace: {{.Values.namespace | default "akash-services"}}
   labels:
-    app: {{include "akash-provider-paladin.name"}}
+    app: {{ include "akash-provider-paladin.name" . }}
   data:
     clear_stuck_pods.sh: |-
       {{.Files.Get "scripts/clear_stuck_pods.sh" | indent 4}}
