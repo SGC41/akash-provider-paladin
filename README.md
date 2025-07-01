@@ -1,5 +1,8 @@
-# Akash Provider Paladin v2.0
-Paladin will help keep providers operational, right now its very basic, but i'm sure it will evolve over time.
+# Akash Provider Paladin v2.2
+Paladin will help keep providers operational.
+
+- v2.2 Feature added RPC rotation aka RPC node failover.
+- v2.0 Cluster Support
 
 This script solves the issue with pods getting stuck on down nodes.
 Which can lead to provider downtime, persistent storage crashes and many other issues.
@@ -8,7 +11,7 @@ Lists all terminating and error state pods across all namespaces and deletes the
 Now runs its own pod called akash-provider-paladin, which cannot get stuck and handles the stuck pod checks and deletions.
 100% cluster support.
 
-will be adding more features soon.
+will be adding more features over time.
 
 Installation simply run the curl command from a single control plane node.
 ```shell

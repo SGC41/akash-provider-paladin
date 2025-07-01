@@ -1,3 +1,4 @@
+buildID: "20250627"
 namespace: akash-services
 
 image:
@@ -5,4 +6,8 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
-scriptPath: "/etc/scripts/clear_stuck_pods.sh"
+# Define which script the container should execute by default
+scriptToRun: "/etc/scripts/ticker.sh"
+
+# Define mount path for scripts injected via ConfigMap
+scriptMountPath: "/etc/scripts"

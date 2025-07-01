@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ include "akash-provider-paladin.fullname" . }}
+  annotations:
+    buildID: {{ .Values.buildID | quote }}
   namespace: {{ .Values.namespace | default "akash-services" }}
   labels:
     app: {{ include "akash-provider-paladin.name" . }}
@@ -18,25 +20,38 @@ spec:
     spec:
       terminationGracePeriodSeconds: 0
       serviceAccountName: {{ include "akash-provider-paladin.fullname" . }}-paladin
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      tolerations:
+        - key: "node-role.kubernetes.io/control-plane"
+          operator: "Exists"
+          effect: "NoSchedule"
       containers:
-      - name: {{ include "akash-provider-paladin.fullname" . }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: ["/bin/bash", "-c"]
-        args: ["{{ .Values.scriptPath }}"]
-        resources:
-          requests:
-            cpu: "50m"
-            memory: "64M"
-          limits:
-            cpu: "50m"
-            memory: "64M"
-        volumeMounts:
-          - name: script-volume
-            mountPath: /etc/scripts
-            readOnly: true
+        - name: {{ include "akash-provider-paladin.fullname" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/bash", "-c"]
+          args: ["{{ .Values.scriptToRun }}"]
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64M"
+            limits:
+              cpu: "50m"
+              memory: "64M"
+          volumeMounts:
+            - name: script-volume
+              mountPath: /etc/scripts
+              readOnly: true
+            - name: host-tmp
+              mountPath: /host/tmp
+              readOnly: false
       volumes:
         - name: script-volume
           configMap:
             name: akash-provider-paladin-script
             defaultMode: 0755
+        - name: host-tmp
+          hostPath:
+            path: /tmp
+            type: Directory
