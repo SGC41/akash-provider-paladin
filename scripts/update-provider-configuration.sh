@@ -14,7 +14,7 @@ kubectl -n akash-services get statefulsets && kubectl -n akash-services get pods
 
 sleep 4
 echo #updating 
-helm upgrade --install akash-provider akash/provider -n akash-services -f ~/akash-provider-paladin/provider.yaml --set bidpricescript="$(cat ~/akash-provider-paladin/price_script_generic.sh | openssl base64 -A)" 
+helm upgrade --install akash-provider akash/provider -n akash-services -f $HOME/akash-provider-paladin/provider.yaml --set bidpricescript="$(cat $HOME/akash-provider-paladin/price_script_generic.sh | openssl base64 -A)" 
 
 echo Start Provider
 kubectl -n akash-services scale statefulsets akash-provider --replicas=1
