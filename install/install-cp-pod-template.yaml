@@ -65,6 +65,7 @@ spec:
 
           echo "[*] Fetching provider.yaml from etcd…"
           etcdctl get /akash-provider-paladin/provider.yaml \
+            --endpoints=https://<etcd-host>:2379 \
             --cacert="$ETCD_CACERT" \
             --cert="$ETCD_CERT" \
             --key="$ETCD_KEY" \
@@ -72,6 +73,7 @@ spec:
 
           echo "[*] Fetching price_script_generic.sh from etcd…"
           etcdctl get /akash-provider-paladin/price_script_generic.sh \
+            --endpoints=https://<etcd-host>:2379 \
             --cacert="$ETCD_CACERT" \
             --cert="$ETCD_CERT" \
             --key="$ETCD_KEY" \
