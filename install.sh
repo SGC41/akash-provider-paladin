@@ -41,6 +41,19 @@ fi
 cd "$TARGET_DIR"
 echo "📌 Working directory: $(pwd)"
 
+# Dynamically select etcd certs based on node shortname
+NODE_SHORTNAME=$(hostname -s)
+
+ETCD_CERT="/etc/ssl/etcd/ssl/node-${NODE_SHORTNAME}.pem"
+ETCD_KEY="/etc/ssl/etcd/ssl/node-${NODE_SHORTNAME}-key.pem"
+ETCD_CACERT="/etc/ssl/etcd/ssl/ca.pem"
+
+# Verify certs exist before proceeding
+for FILE in "$ETCD_CERT" "$ETCD_KEY" "$ETCD_CACERT"; do
+  [[ -f "$FILE" ]] || { echo "❌ Missing required etcd cert/key: $FILE"; exit 1; }
+done
+
+
 # ───────────────────────────────────────────────────────
 # Upload config to etcd
 # ───────────────────────────────────────────────────────
