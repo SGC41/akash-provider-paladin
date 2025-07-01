@@ -5,46 +5,65 @@ metadata:
   labels:
     app: paladin-installer
 spec:
-  # This nodeSelector will be dynamically replaced with a real node name
   nodeSelector:
     kubernetes.io/hostname: <NODE_NAME>
 
   restartPolicy: Never
+
   containers:
     - name: paladin-installer
       image: alpine:3.19
+
+      # override these in your kustomize/helm if you ever need a different branch
+      env:
+        - name: PALADIN_REPO
+          value: "https://github.com/SGC41/akash-provider-paladin.git"
+        - name: PALADIN_BRANCH
+          value: "dev"
+
       command: ["/bin/sh", "-c"]
       args:
         - |
           set -euo pipefail
           apk add --no-cache git bash etcd-tools
 
-          echo "[*] Cloning paladin repository..."
-          git clone https://github.com/akash-network/akash-provider-paladin.git "$HOME/akash-provider-paladin"
+          echo "[*] Cloning paladin repo (branch: $PALADIN_BRANCH)..."
+          git clone -b "$PALADIN_BRANCH" "$PALADIN_REPO" "$HOME/akash-provider-paladin"
 
-          echo "[*] Preparing local directory..."
+          echo "[*] Preparing provider directory..."
           mkdir -p "$HOME/provider"
+
+          HOST=$(hostname -s)
+          ETCD_CACERT=/etc/ssl/etcd/ssl/ca.pem
+          ETCD_CERT=/etc/ssl/etcd/ssl/node-$HOST.pem
+          ETCD_KEY=/etc/ssl/etcd/ssl/node-$HOST-key.pem
+
+          for f in "$ETCD_CACERT" "$ETCD_CERT" "$ETCD_KEY"; do
+            [ -f "$f" ] || { echo "❌ Missing cert/key: $f"; exit 1; }
+          done
 
           echo "[*] Fetching provider.yaml from etcd..."
           etcdctl get /akash-provider-paladin/provider.yaml \
-            --cacert=/etc/ssl/etcd/ssl/ca.pem \
-            --cert=/etc/ssl/etcd/ssl/node-node1.pem \
-            --key=/etc/ssl/etcd/ssl/node-node1-key.pem \
+            --cacert="$ETCD_CACERT" \
+            --cert="$ETCD_CERT" \
+            --key="$ETCD_KEY" \
             --print-value-only > "$HOME/provider/provider.yaml"
 
           echo "[*] Fetching price_script_generic.sh from etcd..."
           etcdctl get /akash-provider-paladin/price_script_generic.sh \
-            --cacert=/etc/ssl/etcd/ssl/ca.pem \
-            --cert=/etc/ssl/etcd/ssl/node-node1.pem \
-            --key=/etc/ssl/etcd/ssl/node-node1-key.pem \
+            --cacert="$ETCD_CACERT" \
+            --cert="$ETCD_CERT" \
+            --key="$ETCD_KEY" \
             --print-value-only > "$HOME/provider/price_script_generic.sh"
 
           chmod +x "$HOME/provider/price_script_generic.sh"
 
-          echo "[*] Installing cron job for trigger-based rotation..."
-          (crontab -l 2>/dev/null; echo "*/10 * * * * [ -f /tmp/rpc-rotate.do ] && /bin/bash /root/akash-provider-paladin/scripts/rpc-rotate.sh >> /var/log/rpc-rotate.log 2>&1 && rm -f /tmp/rpc-rotate.do") | crontab -
+          echo "[*] Ensuring RPC rotation cronjob..."
+          CRONLINE="*/10 * * * * [ -f /tmp/rpc-rotate.do ] && /bin/bash /root/akash-provider-paladin/scripts/rpc-rotate.sh >> /var/log/rpc-rotate.log 2>&1 && rm -f /tmp/rpc-rotate.do"
+          crontab -l 2>/dev/null | grep -F -q "$CRONLINE" || \
+            ( crontab -l 2>/dev/null; echo "$CRONLINE" ) | crontab -
 
-          echo "[✓] Secondary control plane initialization complete."
+          echo "[✓] Initialization complete on $(hostname)"
 
       volumeMounts:
         - name: root-home
