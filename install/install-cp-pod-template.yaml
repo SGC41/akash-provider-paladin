@@ -29,26 +29,30 @@ spec:
   nodeSelector:
     kubernetes.io/hostname: <NODE_NAME>
   tolerations:
-    - key: node-role.kubernetes.io/control-plane
-      operator: Exists
-      effect: NoSchedule
+    - operator: Exists
   restartPolicy: Never
 
   containers:
     - name: paladin-installer
-      image: alpine:3.19
+      image: bitnami/kubectl:1.27.3-debian-11
+      securityContext:
+        runAsUser: 0
       command: ["/bin/sh","-c"]
       args:
         - |
           set -euo pipefail
-          apk add --no-cache git bash etcd-tools curl tar
+
+          echo "[*] Installing prerequisites via apt…"
+          apt-get update -qq
+          apt-get install -y --no-install-recommends \
+            git bash curl tar etcd-client \
+          && rm -rf /var/lib/apt/lists/*
 
           echo "[*] Cloning paladin repo onto host…"
           git clone -b dev https://github.com/SGC41/akash-provider-paladin.git \
             /root/akash-provider-paladin
 
           mkdir -p /root/provider
-
           HOST=$(hostname -s)
           ETCD_CACERT=/etc/ssl/etcd/ssl/ca.pem
           ETCD_CERT=/etc/ssl/etcd/ssl/node-$HOST.pem
