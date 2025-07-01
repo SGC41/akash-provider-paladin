@@ -84,6 +84,26 @@ helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
   --set buildID="$(date +%s)" \
 && echo "Paladin local install completed"
 
+# ───────────────────────────────────────────────────────
+# Pre-deploy cleanup: remove any existing installer pods
+# ───────────────────────────────────────────────────────
+echo "🧹 Cleaning up any existing installer pods…"
+kubectl get pods \
+  -n akash-services \
+  -l app=paladin-installer \
+  --no-headers \
+  -o name \
+| xargs -r kubectl delete -n akash-services --ignore-not-found
+
+# ───────────────────────────────────────────────────────
+# Deploy install pods to control-plane nodes
+# ───────────────────────────────────────────────────────
+echo "🛰 Discovering this node’s k8s name…"
+# …hostname logic…
+
+for NODE in $CONTROL_PLANES; do
+  # skip self, name pod uniquely, apply manifest…
+done
 
 echo "🛰 Deploying installer pods to each control plane…"
 
