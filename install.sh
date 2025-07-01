@@ -81,36 +81,29 @@ echo "🚀 Installing or upgrading Helm chart..."
 helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
   --namespace akash-services \
   --create-namespace \
-  --set buildID="$(date +%s)"
-# ───────────────────────────────────────────────────────
-# Deploy install pods to other control plane nodes
-# ───────────────────────────────────────────────────────
+  --set buildID="$(date +%s)" \
+&& echo "Paladin local install completed"
 
-echo "🛰 Discovering current control-plane node name…"
 
+echo "🛰 Deploying installer pods to each control plane…"
+
+# Discover current node reliably
 HOST_SHORT=$(hostname -s)
 HOST_FULL=$(hostname)
 CURRENT_NODE=""
-
 for H in "$HOST_SHORT" "$HOST_FULL"; do
   CURRENT_NODE=$(kubectl get nodes \
     -l "kubernetes.io/hostname=$H" \
-    --no-headers \
-    -o custom-columns=NAME:.metadata.name 2>/dev/null || true)
+    -o custom-columns=NAME:.metadata.name --no-headers 2>/dev/null || true)
   [[ -n "$CURRENT_NODE" ]] && break
 done
+[[ -n "$CURRENT_NODE" ]] || { echo "❌ Cannot detect this node’s k8s name" >&2; exit 1; }
+echo "✔️ Running on: $CURRENT_NODE"
 
-if [[ -z "$CURRENT_NODE" ]]; then
-  echo "❌ Could not determine this node’s k8s name (tried '$HOST_SHORT' & '$HOST_FULL')" >&2
-  exit 1
-fi
-
-echo "✔️ Running on control-plane node: $CURRENT_NODE"
-
+# List all control-plane nodes
 CONTROL_PLANES=$(kubectl get nodes \
   -l node-role.kubernetes.io/control-plane \
-  --no-headers \
-  -o custom-columns=NAME:.metadata.name)
+  -o custom-columns=NAME:.metadata.name --no-headers)
 
 for NODE in $CONTROL_PLANES; do
   if [[ "$NODE" == "$CURRENT_NODE" ]]; then
@@ -118,9 +111,15 @@ for NODE in $CONTROL_PLANES; do
     continue
   fi
 
-  echo "📦 Deploying install pod on: $NODE"
-  sed "s|<NODE_NAME>|$NODE|g" "$MANIFEST_TEMPLATE" > "$TMP_MANIFEST"
+  POD_NAME="install-secondary-cp-$NODE"
+  echo "📦 Deploying $POD_NAME on $NODE"
+
+  # Substitute both node & pod placeholders
+  sed "s|<NODE_NAME>|$NODE|g; s|<NODE_NAME>|$NODE|g; s|install-secondary-cp-<NODE_NAME>|$POD_NAME|g" \
+    "$MANIFEST_TEMPLATE" > "$TMP_MANIFEST"
+
   kubectl apply -f "$TMP_MANIFEST"
 done
 
-echo "✅ All install pods launched on remote control planes."
+echo "✅ All installer pods launched in akash-services namespace."
+
