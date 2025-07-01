@@ -35,9 +35,13 @@ spec:
   containers:
     - name: paladin-installer
       image: bitnami/kubectl:latest
+      imagePullPolicy: IfNotPresent
       securityContext:
         runAsUser: 0
-      command: ["/bin/bash","-c"]
+      env:
+        - name: TARGET_NODE
+          value: "<NODE_NAME>"
+      command: ["/bin/bash", "-c"]
       args:
         - |
           set -euo pipefail
@@ -53,10 +57,10 @@ spec:
             /root/akash-provider-paladin
 
           mkdir -p /root/provider
-          HOST=$(hostname -s)
+
           ETCD_CACERT=/etc/ssl/etcd/ssl/ca.pem
-          ETCD_CERT=/etc/ssl/etcd/ssl/node-$HOST.pem
-          ETCD_KEY=/etc/ssl/etcd/ssl/node-$HOST-key.pem
+          ETCD_CERT=/etc/ssl/etcd/ssl/node-${TARGET_NODE}.pem
+          ETCD_KEY=/etc/ssl/etcd/ssl/node-${TARGET_NODE}-key.pem
 
           echo "[*] Fetching provider.yaml from etcd…"
           etcdctl get /akash-provider-paladin/provider.yaml \
@@ -79,7 +83,7 @@ spec:
           crontab -l 2>/dev/null | grep -F -q "$CRONLINE" || \
             (crontab -l 2>/dev/null; echo "$CRONLINE") | crontab -
 
-          echo "[✓] Install complete on $(hostname)"
+          echo "[✓] Install complete for $TARGET_NODE"
 
       volumeMounts:
         - name: root-home
@@ -97,5 +101,4 @@ spec:
       hostPath:
         path: /etc/ssl/etcd/ssl
         type: Directory
-
 
