@@ -1,5 +1,10 @@
+#!/bin/bash
+#
+#  v2.2.4
 
-cd ~/provider
+set -euo pipefail
+
+cd ~/akash-provider-paladin
 kubectl -n akash-services get statefulsets && kubectl -n akash-services scale statefulsets akash-provider --replicas=0
 
 sleep 4
