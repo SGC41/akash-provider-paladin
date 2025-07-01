@@ -3,8 +3,6 @@ set -euxo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# Clones repo, pushes config to etcd, installs Helm chart,
-# and deploys RPC rotation installer pods to other control planes.
 # ───────────────────────────────────────────────────────
 
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
@@ -20,36 +18,37 @@ ETCD_KEY="/etc/ssl/etcd/ssl/node-node1-key.pem"
 PROVIDER_SRC="$HOME/provider/provider.yaml"
 PRICE_SCRIPT_SRC="$HOME/provider/price_script_generic.sh"
 
-echo "🔄 Cloning or updating the Akash Provider Paladin repository..."
+# ───────────────────────────────────────────────────────
+# Clone or update repo cleanly
+# ───────────────────────────────────────────────────────
 
-if [[ "$PWD" == "$TARGET_DIR" ]]; then
-  echo "📍 Already in $TARGET_DIR. Pulling latest changes..."
-  git fetch origin "$BRANCH"
-  git reset --hard "origin/$BRANCH"
-elif [[ ! -d "$TARGET_DIR" ]]; then
-  echo "📂 Directory $TARGET_DIR not found. Cloning repository..."
+if [[ "$PWD" == "$TARGET_DIR"* ]]; then
+  echo "⚠️ Running from inside $TARGET_DIR — restarting clean"
+  cd "$HOME"
+  rm -rf "$TARGET_DIR"
+fi
+
+if [[ ! -d "$TARGET_DIR/.git" ]]; then
+  echo "📂 Cloning repository..."
   git clone -b "$BRANCH" "$REPO" "$TARGET_DIR"
-  cd "$TARGET_DIR"
 else
-  echo "📁 Directory exists. Updating repository..."
+  echo "🔄 Updating existing repo..."
   cd "$TARGET_DIR"
   git fetch origin "$BRANCH"
   git reset --hard "origin/$BRANCH"
 fi
 
-echo "📌 Current working directory: $(pwd)"
+cd "$TARGET_DIR"
+echo "📌 Working directory: $(pwd)"
+
+# ───────────────────────────────────────────────────────
+# Upload config to etcd
+# ───────────────────────────────────────────────────────
 
 echo "💾 Pushing provider.yaml and price_script_generic.sh to etcd..."
 
-if [[ ! -f "$PROVIDER_SRC" ]]; then
-  echo "❌ Missing $PROVIDER_SRC"
-  exit 1
-fi
-
-if [[ ! -f "$PRICE_SCRIPT_SRC" ]]; then
-  echo "❌ Missing $PRICE_SCRIPT_SRC"
-  exit 1
-fi
+[[ -f "$PROVIDER_SRC" ]] || { echo "❌ Missing file: $PROVIDER_SRC"; exit 1; }
+[[ -f "$PRICE_SCRIPT_SRC" ]] || { echo "❌ Missing file: $PRICE_SCRIPT_SRC"; exit 1; }
 
 etcdctl put /akash-provider-paladin/provider.yaml \
   --cacert="$ETCD_CACERT" \
@@ -61,6 +60,10 @@ etcdctl put /akash-provider-paladin/price_script_generic.sh \
   --cert="$ETCD_CERT" \
   --key="$ETCD_KEY" < "$PRICE_SCRIPT_SRC"
 
+# ───────────────────────────────────────────────────────
+# Helm install or upgrade
+# ───────────────────────────────────────────────────────
+
 echo "🚀 Installing or upgrading Helm chart..."
 helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
   --namespace akash-services \
@@ -68,14 +71,15 @@ helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
   --set buildID="$(date +%s)"
 
 # ───────────────────────────────────────────────────────
-# 🛰 Distribute install pods to other control plane nodes
+# Deploy install pods to other control plane nodes
 # ───────────────────────────────────────────────────────
 
 echo "🛰 Discovering other control planes..."
 
-CURRENT_NODE=$(kubectl get node -o wide | awk -v host="$(hostname)" '$7 == host { print $1 }')
+CURRENT_NODE=$(kubectl get node -o wide | awk -v host="$(hostname)" '$7 == host { print $1 }' || true)
+
 if [[ -z "$CURRENT_NODE" ]]; then
-  echo "❌ Could not determine current node name."
+  echo "❌ Could not determine current control plane node name."
   exit 1
 fi
 
@@ -83,7 +87,7 @@ CONTROL_PLANES=$(kubectl get nodes -l node-role.kubernetes.io/control-plane --no
 
 for NODE in $CONTROL_PLANES; do
   if [[ "$NODE" == "$CURRENT_NODE" ]]; then
-    echo "🔁 Skipping current node: $NODE"
+    echo "🔁 Skipping self: $NODE"
     continue
   fi
 
