@@ -59,30 +59,6 @@ spec:
 
           mkdir -p /root/provider
 
-          ETCD_CACERT=/etc/ssl/etcd/ssl/ca.pem
-          ETCD_CERT=/etc/ssl/etcd/ssl/node-${TARGET_NODE}.pem
-          ETCD_KEY=/etc/ssl/etcd/ssl/node-${TARGET_NODE}-key.pem
-          ETCD_HOST=${TARGET_NODE}
-          ETCD_ENDPOINTS=https://${ETCD_HOST}:2379
-
-          echo "[*] Fetching provider.yaml from etcd…"
-          etcdctl get /akash-provider-paladin/provider.yaml \
-            --endpoints="${ETCD_ENDPOINTS}" \
-            --cacert="$ETCD_CACERT" \
-            --cert="$ETCD_CERT" \
-            --key="$ETCD_KEY" \
-            --print-value-only > /root/provider/provider.yaml
-
-          echo "[*] Fetching price_script_generic.sh from etcd…"
-          etcdctl get /akash-provider-paladin/price_script_generic.sh \
-            --endpoints="${ETCD_ENDPOINTS}" \
-            --cacert="$ETCD_CACERT" \
-            --cert="$ETCD_CERT" \
-            --key="$ETCD_KEY" \
-            --print-value-only > /root/provider/price_script_generic.sh
-
-          chmod +x /root/provider/price_script_generic.sh
-
           echo "[*] Ensuring RPC rotation cronjob…"
           CRONLINE="*/10 * * * * [ -f /tmp/rpc-rotate.do ] && /bin/sh /root/akash-provider-paladin/scripts/rpc-rotate.sh >> /var/log/rpc-rotate.log 2>&1 && rm -f /tmp/rpc-rotate.do"
           crontab -l 2>/dev/null | grep -F -q "$CRONLINE" || \
@@ -102,8 +78,5 @@ spec:
       hostPath:
         path: /root
         type: Directory
-    - name: etcd-certs
-      hostPath:
-        path: /etc/ssl/etcd/ssl
-        type: Directory
+
 
