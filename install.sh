@@ -87,20 +87,20 @@ helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
 # ───────────────────────────────────────────────────────
 # Pre-deploy cleanup: remove any existing installer pods
 # ───────────────────────────────────────────────────────
-echo "🧹 Cleaning up any existing installer pods…"
-kubectl get pods \
+# ───────────────────────────────────────────────────────
+# Pre-deploy cleanup: remove any stuck installer pods
+# ───────────────────────────────────────────────────────
+echo "🧹 Cleaning up any Pending installer pods…"
+kubectl delete pods \
   -n akash-services \
   -l app=paladin-installer \
-  --no-headers \
-  -o name \
-| xargs -r kubectl delete -n akash-services --ignore-not-found
+  --ignore-not-found
 
 # ───────────────────────────────────────────────────────
-# Deploy install pods to control-plane nodes
+# Deploy install pods to control-plane nodes (as before)
 # ───────────────────────────────────────────────────────
 echo "🛰 Discovering this node’s k8s name…"
 # …hostname logic…
-
 for NODE in $CONTROL_PLANES; do
   # skip self, name pod uniquely, apply manifest…
 done
