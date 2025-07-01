@@ -69,9 +69,6 @@ spec:
       volumeMounts:
         - name: root-home
           mountPath: /root
-        - name: etcd-certs
-          mountPath: /etc/ssl/etcd/ssl
-          readOnly: true
 
   volumes:
     - name: root-home
