@@ -72,11 +72,18 @@ spec:
       volumeMounts:
         - name: root-home
           mountPath: /root
+        - name: host-crontab
+          mountPath: /var/spool/cron/crontabs
 
   volumes:
     - name: root-home
       hostPath:
         path: /root
         type: Directory
+    - name: host-crontab
+      hostPath:
+        path: /var/spool/cron/crontabs
+        type: Directory
+
 
 
