@@ -1,222 +1,222 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export ETCDCTL_API=3
+
+# ──────────────────────────────────────────────────────────────
 # rpc-rotate.sh
 # Rotates the active `node:` entry in provider.yaml,
 # injects RPC-rotation comments and public fallbacks,
-# and supports a “--local” mode to revert to your local RPC.
+# supports “--local” revert-to-local mode.
+# ──────────────────────────────────────────────────────────────
 
-#grab current provider.yaml and price script
-etcdctl get /akash-provider-paladin/provider.yaml > ~/akash-provider-paladin/provider/provider.yaml \
-  --cacert=/etc/ssl/etcd/ssl/ca.pem \
-  --cacert=/etc/ssl/etcd/ssl/ca.pem \
-  --cert=/etc/ssl/etcd/ssl/node-node1.pem \
-  --key=/etc/ssl/etcd/ssl/node-node1-key.pem \
-  --print-value-only
-
-etcdctl get /akash-provider-paladin/price_script_generic.sh > ~/akash-provider-paladin/provider/price_script_generic.sh \
-  --cacert=/etc/ssl/etcd/ssl/ca.pem \
-  --cacert=/etc/ssl/etcd/ssl/ca.pem \
-  --cert=/etc/ssl/etcd/ssl/node-node1.pem \
-  --key=/etc/ssl/etcd/ssl/node-node1-key.pem \
-  --print-value-only
-
-# ─── Arg parsing ─────────────────────────────────────
+# ── Arg parsing ──────────────────────────────────────────────
 LOCAL_MODE=false
 if [[ "${1:-}" == "--local" ]]; then
   LOCAL_MODE=true
   shift
 fi
 
-# ─── Configuration ────────────────────────────────────
-PROVIDER_HOME="${1:-$HOME/provider}"
+PROVIDER_HOME="${1:-$HOME/akash-provider-paladin}"
 FILE="$PROVIDER_HOME/provider.yaml"
+PRICE_SCRIPT_FILE="$PROVIDER_HOME/price_script_generic.sh"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DATE_TAG="$(date +%m-%d)"
 BACKUP="$FILE.$DATE_TAG"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Local-RPC recovery settings
-LOCAL_NODE_NAME="localnode"                   # adjust if yours is named differently
-HEALTH_TIMESTAMP_FILE="/tmp/local_rpc_healthy_since"
-MIN_HEALTH_DURATION=$((3 * 3600))             # 3 h
-# ──────────────────────────────────────────────────────
 
-# 1) Sanity check
-if [[ ! -f "$FILE" ]]; then
-  echo "❌ ERROR: cannot find $FILE" >&2
-  exit 1
-fi
+# ── Dynamic etcd cert detection ──────────────────────────────
+NODE_SHORT=$(hostname -s)
+ETCD_CACERT="/etc/ssl/etcd/ssl/ca.pem"
+ETCD_CERT="/etc/ssl/etcd/ssl/node-${NODE_SHORT}.pem"
+ETCD_KEY="/etc/ssl/etcd/ssl/node-${NODE_SHORT}-key.pem"
 
-# 2) “--local” revert logic
+for f in "$ETCD_CACERT" "$ETCD_CERT" "$ETCD_KEY"; do
+  [[ -r "$f" ]] || { echo "❌ Cannot read etcd file: $f" >&2; exit 1; }
+done
+
+ETCD_FLAGS="\
+--cacert=${ETCD_CACERT} \
+--cert=${ETCD_CERT} \
+--key=${ETCD_KEY} \
+--print-value-only"
+
+# ── Confirmation Prompt ───────────────────────────────────────
+echo "⚠️  WARNING: This will overwrite local files from ETCD:"
+echo "   $FILE"
+echo "   $PRICE_SCRIPT_FILE"
+echo
+read -rp "Continue? (Y/N): " REPLY
+REPLY=${REPLY,,}
+
+[[ "$REPLY" == y || "$REPLY" == yes ]] || { echo "❌ Aborted."; exit 0; }
+
+# ── Ensure local directory exists ────────────────────────────
+mkdir -p "$PROVIDER_HOME"
+
+# ── Fetch current configs from ETCD ──────────────────────────
+echo "📥 Fetching provider.yaml…"
+etcdctl get /akash-provider-paladin/provider.yaml $ETCD_FLAGS > "$FILE"
+
+echo "📥 Fetching price_script_generic.sh…"
+etcdctl get /akash-provider-paladin/price_script_generic.sh $ETCD_FLAGS > "$PRICE_SCRIPT_FILE"
+chmod +x "$PRICE_SCRIPT_FILE"
+
+# ── “--local” revert logic ──────────────────────────────────
 if [[ "$LOCAL_MODE" == true ]]; then
   echo "[rpc][local] revert mode: probing local RPC…"
-
-  # a) Health + sync check
   if curl --fail --silent --max-time 3 http://localhost:26657/status \
        | grep -q '"catching_up": false'; then
 
     now=$(date +%s)
+    TS_FILE="/tmp/local_rpc_healthy_since"
 
-    # b) First healthy stamp?
-    if [[ ! -f "$HEALTH_TIMESTAMP_FILE" ]]; then
-      echo "$now" > "$HEALTH_TIMESTAMP_FILE"
+    if [[ ! -f "$TS_FILE" ]]; then
+      echo "$now" > "$TS_FILE"
       echo "[rpc][local] first healthy stamp at $(date -d "@$now")"
       exit 0
     fi
 
-    last=$(<"$HEALTH_TIMESTAMP_FILE")
+    last=$(<"$TS_FILE")
     elapsed=$(( now - last ))
 
-    # c) Healthy ≥ 3 h → revert
-    if (( elapsed >= MIN_HEALTH_DURATION )); then
-      echo "[rpc][local] healthy for $((elapsed/3600)) h—reverting to local RPC"
-
-      # comment out all candidate lines
-      mapfile -t all_nodes < <(
+    if (( elapsed >= 3*3600 )); then
+      echo "[rpc][local] healthy for $((elapsed/3600))h — reverting to local RPC"
+      # comment out all node: lines
+      mapfile -t lines < <(
         grep -En '^[[:space:]]*#?node:' "$FILE" | grep -v '^[[:space:]]*##'
       )
-      for entry in "${all_nodes[@]}"; do
+      for entry in "${lines[@]}"; do
         ln="${entry%%:*}"
         sed -i "${ln}s|^[[:space:]]*node:|#node:|" "$FILE"
       done
-
-      # find & uncomment your localnode line
-      line=$(
-        grep -En "^#?node:.*localhost.*${LOCAL_NODE_NAME}" "$FILE" \
+      # unblock your local node
+      ln=$(
+        grep -En "^#?node:.*localhost.*localnode" "$FILE" \
         | head -n1 | cut -d: -f1
       )
-      if [[ -n "$line" ]]; then
-        sed -i "${line}s|^#node:|node:|" "$FILE"
-        echo "[rpc][local] activated localnode (line $line)"
+      if [[ -n "$ln" ]]; then
+        sed -i "${ln}s|^#node:|node:|" "$FILE"
+        echo "[rpc][local] activated localnode (line $ln)"
       else
-        echo "[rpc][local] ⚠️  localnode entry not found—no changes made"
+        echo "[rpc][local] ⚠️  no localnode entry found"
       fi
 
-      rm -f "$HEALTH_TIMESTAMP_FILE"
+      rm -f "$TS_FILE"
       "$SCRIPT_DIR/update-provider-configuration.sh"
       exit 0
-
     else
-      remain=$(( (MIN_HEALTH_DURATION - elapsed) / 60 ))
-      echo "[rpc][local] warming up: $remain min until eligible"
+      remain=$(( (3*3600 - elapsed)/60 ))
+      echo "[rpc][local] warming up: $remain min until revert"
       exit 0
     fi
-
   else
-    echo "[rpc][local] probe failed—resetting timer"
-    rm -f "$HEALTH_TIMESTAMP_FILE"
+    echo "[rpc][local] probe failed — resetting timer"
+    rm -f /tmp/local_rpc_healthy_since
     exit 0
   fi
 fi
 
-# 3) Daily backup (no overwrite)
+# ── Daily backup ────────────────────────────────────────────
 if [[ ! -e "$BACKUP" ]]; then
   cp "$FILE" "$BACKUP"
-  echo "🛡️  backed up original to $BACKUP"
+  echo "🛡️  backed up to $BACKUP"
 else
-  echo "🛡️  backup already exists: $BACKUP"
+  echo "🛡️  backup exists: $BACKUP"
 fi
 
-# 4) Top-level RPC rotation config (prepend once)
+# ── Top-level header injection ──────────────────────────────
 if ! grep -qF "RPC Rotation Configuration" "$FILE"; then
   tmp="$(mktemp)"
   {
-    echo "# ────────────────────────────────────────────"
-    echo "# RPC Rotation Configuration"
-    echo "# Managed by Akash-Provider-Paladin"
-    echo "# Rotates active node entries and injects fallbacks"
-    echo "# ────────────────────────────────────────────"
+    echo "# ── RPC Rotation Configuration (managed by rpc-rotate.sh) ──"
     echo
     cat "$FILE"
   } > "$tmp"
   mv "$tmp" "$FILE"
-  echo "✏️  inserted top-level RPC rotation config block"
+  echo "✏️  inserted top-level header"
 else
-  echo "✅ top-level RPC rotation config already present"
+  echo "✅ header already present"
 fi
 
-# 5) Inject header + skip comments above first node: (once)
+# ── Node list header & skip comments ───────────────────────
 if ! grep -qF "# RPC node list" "$FILE"; then
   first_line=$(
     grep -nE '^[[:space:]]*#?node:' "$FILE" \
       | head -n1 | cut -d: -f1
   )
   if [[ -n "$first_line" ]]; then
-    sed -i "${first_line}i # RPC node list (managed by Paladin Script rpc-rotate.sh)" "$FILE"
-    sed -i "${first_line}i # RPC nodes starting with ## are permanently skipped in rotation." "$FILE"
-    sed -i "${first_line}i # Local RPC node is checked at 3am local time and if good, will be activated" "$FILE"
-    echo "✏️  inserted header + skip comments above node lines"
-  else
-    echo "⚠️  no node: lines found—skipping header injection"
+    sed -i "${first_line}i # RPC node list (managed by rpc-rotate.sh)" "$FILE"
+    sed -i "${first_line}i # Nodes prefixed with ## are skipped permanently" "$FILE"
+    sed -i "${first_line}i # Local node is probed nightly and may be unblocked" "$FILE"
+    echo "✏️  inserted node-list header"
   fi
 else
-  echo "✅ header + skip comments already present"
+  echo "✅ node-list header already present"
 fi
 
-# 6) Ensure public RPC fallbacks
+# ── Public fallback injection ───────────────────────────────
 fallbacks=(
   "https://rpc-akash.ecostake.com:443"
   "https://akash-rpc.europlots.com:443"
   "https://akash-rpc.polkachu.com:443"
   "https://rpc.akashnet.net:443"
 )
-last_node_line=$(
-  grep -En '^[[:space:]]*#?node:' "$FILE" | tail -n1 | cut -d: -f1
+last_line=$(
+  grep -En '^[[:space:]]*#?node:' "$FILE" \
+    | tail -n1 | cut -d: -f1
 )
-if [[ -n "$last_node_line" ]]; then
-  for url in "${fallbacks[@]}"; do
-    if ! grep -qF "$url" "$FILE"; then
-      sed -i "$((last_node_line+1))i #node: $url" "$FILE"
-      echo "➕ inserted fallback node: $url"
-      last_node_line=$((last_node_line+1))
-    fi
-  done
-else
-  echo "⚠️  no node: lines found—skipping fallback insertion"
-fi
+for url in "${fallbacks[@]}"; do
+  if ! grep -qF "$url" "$FILE"; then
+    sed -i "$((last_line+1))i #node: $url" "$FILE"
+    echo "➕ inserted fallback: $url"
+    last_line=$((last_line+1))
+  fi
+done
 
-# 7) Rotation logic
+# ── Rotation logic ─────────────────────────────────────────
 mapfile -t nodes < <(
   grep -En '^[[:space:]]*#?node:' "$FILE" | grep -v '^[[:space:]]*##'
 )
 if (( ${#nodes[@]} == 0 )); then
-  echo "❌ ERROR: no node: lines found in $FILE" >&2
+  echo "❌ no node: entries in $FILE" >&2
   exit 1
 fi
 
 active=-1
 for i in "${!nodes[@]}"; do
   if [[ ${nodes[$i]} =~ ^([0-9]+):[[:space:]]*node: ]]; then
-    active=$i; break
+    active=$i
+    break
   fi
 done
-next=0
-if (( active >= 0 )); then
-  next=$(( (active + 1) % ${#nodes[@]} ))
-fi
 
+next=0
+(( active >= 0 )) && next=$(( (active + 1) % ${#nodes[@]} ))
+
+# comment out all
 for entry in "${nodes[@]}"; do
   ln="${entry%%:*}"
   sed -i "${ln}s|^[[:space:]]*node:|#node:|" "$FILE"
 done
 
+# activate next
 ln="${nodes[$next]%%:*}"
 sed -i "${ln}s|^#node:|node:|" "$FILE"
+echo "🔁 rotated to line $ln"
 
-echo "🔁 rotated RPC node in $FILE (activated line $ln)"
 "$SCRIPT_DIR/update-provider-configuration.sh"
 
-echo "[rpc] pushing updated files back to etcd..."
+# ── Push updated config back to etcd ─────────────────────────
+echo "[rpc] uploading updated provider.yaml…"
+etcdctl --cacert="$ETCD_CACERT" \
+        --cert="$ETCD_CERT" \
+        --key="$ETCD_KEY" \
+        put /akash-provider-paladin/provider.yaml < "$FILE"
 
-etcdctl put /akash-provider-paladin/provider.yaml "$(cat ~/akash-provider-paladin/provider.yaml)" \
-  --cacert=/etc/ssl/etcd/ssl/ca.pem \
-  --cacert=/etc/ssl/etcd/ssl/ca.pem \
-  --cert=/etc/ssl/etcd/ssl/node-node1.pem \
-  --key=/etc/ssl/etcd/ssl/node-node1-key.pem
-
-etcdctl put /akash-provider-paladin/price_script_generic.sh "$(cat ~/akash-provider-paladin/price_script_generic.sh)" \
-  --cacert=/etc/ssl/etcd/ssl/ca.pem \
-  --cacert=/etc/ssl/etcd/ssl/ca.pem \
-  --cert=/etc/ssl/etcd/ssl/node-node1.pem \
-  --key=/etc/ssl/etcd/ssl/node-node1-key.pem
+echo "[rpc] uploading updated price_script_generic.sh…"
+etcdctl --cacert="$ETCD_CACERT" \
+        --cert="$ETCD_CERT" \
+        --key="$ETCD_KEY" \
+        put /akash-provider-paladin/price_script_generic.sh < "$PRICE_SCRIPT_FILE"
 
 echo "[rpc] etcd update complete ✅"
