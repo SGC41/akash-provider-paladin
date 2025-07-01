@@ -40,16 +40,6 @@ ETCD_FLAGS="\
 --key=${ETCD_KEY} \
 --print-value-only"
 
-# ── Confirmation Prompt ───────────────────────────────────────
-echo "⚠️  WARNING: This will overwrite local files from ETCD:"
-echo "   $FILE"
-echo "   $PRICE_SCRIPT_FILE"
-echo
-read -rp "Continue? (Y/N): " REPLY
-REPLY=${REPLY,,}
-
-[[ "$REPLY" == y || "$REPLY" == yes ]] || { echo "❌ Aborted."; exit 0; }
-
 # ── Ensure local directory exists ────────────────────────────
 mkdir -p "$PROVIDER_HOME"
 
