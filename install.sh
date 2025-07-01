@@ -97,7 +97,6 @@ kubectl delete pods \
 # ───────────────────────────────────────────────────────
 # Deploy install pods to control-plane nodes (as before)
 # ───────────────────────────────────────────────────────
-
 echo "🛰 Deploying installer pods to each control plane…"
 
 # Discover current node reliably
@@ -110,14 +109,19 @@ for H in "$HOST_SHORT" "$HOST_FULL"; do
     -o custom-columns=NAME:.metadata.name --no-headers 2>/dev/null || true)
   [[ -n "$CURRENT_NODE" ]] && break
 done
-[[ -n "$CURRENT_NODE" ]] || { echo "❌ Cannot detect this node’s k8s name" >&2; exit 1; }
+
+if [[ -z "$CURRENT_NODE" ]]; then
+  echo "❌ Cannot detect this node’s k8s name" >&2
+  exit 1
+fi
 echo "✔️ Running on: $CURRENT_NODE"
 
-# List all control-plane nodes
+# Fetch all control-plane nodes
 CONTROL_PLANES=$(kubectl get nodes \
   -l node-role.kubernetes.io/control-plane \
   -o custom-columns=NAME:.metadata.name --no-headers)
 
+# Apply installer to every other control-plane
 for NODE in $CONTROL_PLANES; do
   if [[ "$NODE" == "$CURRENT_NODE" ]]; then
     echo "🔁 Skipping self: $NODE"
@@ -127,12 +131,11 @@ for NODE in $CONTROL_PLANES; do
   POD_NAME="install-secondary-cp-$NODE"
   echo "📦 Deploying $POD_NAME on $NODE"
 
-  # Substitute both node & pod placeholders
-  sed "s|<NODE_NAME>|$NODE|g; s|<NODE_NAME>|$NODE|g; s|install-secondary-cp-<NODE_NAME>|$POD_NAME|g" \
-    "$MANIFEST_TEMPLATE" > "$TMP_MANIFEST"
+  sed -e "s|<NODE_NAME>|$NODE|g" \
+      -e "s|install-secondary-cp-<NODE_NAME>|$POD_NAME|g" \
+      "$MANIFEST_TEMPLATE" > "$TMP_MANIFEST"
 
   kubectl apply -f "$TMP_MANIFEST"
 done
 
 echo "✅ All installer pods launched in akash-services namespace."
-
