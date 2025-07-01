@@ -82,6 +82,7 @@ helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
   --namespace akash-services \
   --create-namespace \
   --set buildID="$(date +%s)" \
+&& kubectl delete pod akash-provider-paladin-0 -n akash-services \
 && echo "Paladin local install completed"
 
 # ───────────────────────────────────────────────────────
