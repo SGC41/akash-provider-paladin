@@ -82,21 +82,35 @@ helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
   --namespace akash-services \
   --create-namespace \
   --set buildID="$(date +%s)"
-
 # ───────────────────────────────────────────────────────
 # Deploy install pods to other control plane nodes
 # ───────────────────────────────────────────────────────
 
-echo "🛰 Discovering other control planes..."
+echo "🛰 Discovering current control-plane node name…"
 
-CURRENT_NODE=$(kubectl get node -o wide | awk -v host="$(hostname)" '$7 == host { print $1 }' || true)
+HOST_SHORT=$(hostname -s)
+HOST_FULL=$(hostname)
+CURRENT_NODE=""
+
+for H in "$HOST_SHORT" "$HOST_FULL"; do
+  CURRENT_NODE=$(kubectl get nodes \
+    -l "kubernetes.io/hostname=$H" \
+    --no-headers \
+    -o custom-columns=NAME:.metadata.name 2>/dev/null || true)
+  [[ -n "$CURRENT_NODE" ]] && break
+done
 
 if [[ -z "$CURRENT_NODE" ]]; then
-  echo "❌ Could not determine current control plane node name."
+  echo "❌ Could not determine this node’s k8s name (tried '$HOST_SHORT' & '$HOST_FULL')" >&2
   exit 1
 fi
 
-CONTROL_PLANES=$(kubectl get nodes -l node-role.kubernetes.io/control-plane --no-headers | awk '{print $1}')
+echo "✔️ Running on control-plane node: $CURRENT_NODE"
+
+CONTROL_PLANES=$(kubectl get nodes \
+  -l node-role.kubernetes.io/control-plane \
+  --no-headers \
+  -o custom-columns=NAME:.metadata.name)
 
 for NODE in $CONTROL_PLANES; do
   if [[ "$NODE" == "$CURRENT_NODE" ]]; then
