@@ -20,7 +20,7 @@ fi
 PROVIDER_HOME="${1:-$HOME/akash-provider-paladin}"
 FILE="$PROVIDER_HOME/provider.yaml"
 PRICE_SCRIPT_FILE="$PROVIDER_HOME/price_script_generic.sh"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$PROVIDER_HOME/scripts/"
 DATE_TAG="$(date +%m-%d)"
 BACKUP="$FILE.$DATE_TAG"
 
