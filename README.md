@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.2.5
+# Akash Provider Paladin v2.2.5 - broken
 Paladin will help keep providers operational.
 - v2.2.5 cluster install
 - v2.2 Feature added RPC rotation aka RPC node failover.
