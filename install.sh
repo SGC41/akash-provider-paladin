@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-set -e
+set -euxo pipefail
 
 # ───────────────────────────────────────────────────────
-# Akash Provider Paladin Installer — Control Plane Boostrap
-# Clones the repo, pushes config to etcd, installs the Helm chart,
-# and distributes RPC rotate logic to all other control planes.
+# Akash Provider Paladin Installer — Control Plane Bootstrap
+# Clones repo, pushes config to etcd, installs Helm chart,
+# and deploys RPC rotation installer pods to other control planes.
 # ───────────────────────────────────────────────────────
 
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
@@ -12,6 +12,13 @@ BRANCH="dev"
 TARGET_DIR="$HOME/akash-provider-paladin"
 MANIFEST_TEMPLATE="$TARGET_DIR/install/install-cp-pod-template.yaml"
 TMP_MANIFEST="/tmp/secondary-cp-install.yaml"
+
+ETCD_CACERT="/etc/ssl/etcd/ssl/ca.pem"
+ETCD_CERT="/etc/ssl/etcd/ssl/node-node1.pem"
+ETCD_KEY="/etc/ssl/etcd/ssl/node-node1-key.pem"
+
+PROVIDER_SRC="$HOME/provider/provider.yaml"
+PRICE_SCRIPT_SRC="$HOME/provider/price_script_generic.sh"
 
 echo "🔄 Cloning or updating the Akash Provider Paladin repository..."
 
@@ -33,19 +40,26 @@ fi
 echo "📌 Current working directory: $(pwd)"
 
 echo "💾 Pushing provider.yaml and price_script_generic.sh to etcd..."
-ETCD_CACERT="/etc/ssl/etcd/ssl/ca.pem"
-ETCD_CERT="/etc/ssl/etcd/ssl/node-node1.pem"
-ETCD_KEY="/etc/ssl/etcd/ssl/node-node1-key.pem"
 
-etcdctl put /akash-provider-paladin/provider.yaml "$(cat ~/provider/provider.yaml)" \
+if [[ ! -f "$PROVIDER_SRC" ]]; then
+  echo "❌ Missing $PROVIDER_SRC"
+  exit 1
+fi
+
+if [[ ! -f "$PRICE_SCRIPT_SRC" ]]; then
+  echo "❌ Missing $PRICE_SCRIPT_SRC"
+  exit 1
+fi
+
+etcdctl put /akash-provider-paladin/provider.yaml \
   --cacert="$ETCD_CACERT" \
   --cert="$ETCD_CERT" \
-  --key="$ETCD_KEY"
+  --key="$ETCD_KEY" < "$PROVIDER_SRC"
 
-etcdctl put /akash-provider-paladin/price_script_generic.sh "$(cat ~/provider/price_script_generic.sh)" \
+etcdctl put /akash-provider-paladin/price_script_generic.sh \
   --cacert="$ETCD_CACERT" \
   --cert="$ETCD_CERT" \
-  --key="$ETCD_KEY"
+  --key="$ETCD_KEY" < "$PRICE_SCRIPT_SRC"
 
 echo "🚀 Installing or upgrading Helm chart..."
 helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
@@ -59,15 +73,12 @@ helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
 
 echo "🛰 Discovering other control planes..."
 
-# Get the current control plane node name
 CURRENT_NODE=$(kubectl get node -o wide | awk -v host="$(hostname)" '$7 == host { print $1 }')
-
 if [[ -z "$CURRENT_NODE" ]]; then
   echo "❌ Could not determine current node name."
   exit 1
 fi
 
-# Get list of all control plane nodes
 CONTROL_PLANES=$(kubectl get nodes -l node-role.kubernetes.io/control-plane --no-headers | awk '{print $1}')
 
 for NODE in $CONTROL_PLANES; do
