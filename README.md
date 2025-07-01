@@ -1,6 +1,6 @@
-# Akash Provider Paladin v2.2
+# Akash Provider Paladin v2.2.5
 Paladin will help keep providers operational.
-
+- v2.2.5 cluster install
 - v2.2 Feature added RPC rotation aka RPC node failover.
 - v2.0 Cluster Support
 
@@ -15,12 +15,12 @@ will be adding more features over time.
 
 Installation simply run the curl command from a single control plane node.
 ```shell
-curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/dev/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/dev/install.sh | bash
 ```
 Uninstall Paladin v1
 
 ```shell
-curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/dev/uninstall-v1.sh | sh
+curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/dev/uninstall-v1.sh | bash
 ```
 
 Manual install.
