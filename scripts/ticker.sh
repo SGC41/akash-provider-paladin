@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# ticker.sh v2.2.4
+# ticker.sh v2.2.5
 # Monitors provider restarts and triggers RPC rotation.
 # Additionally runs stuck pod cleanup exactly on 00 and 30 minute marks.
 
