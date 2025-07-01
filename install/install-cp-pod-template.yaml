@@ -37,7 +37,7 @@ spec:
       image: bitnami/kubectl:latest
       securityContext:
         runAsUser: 0
-      command: ["/bin/sh","-c"]
+      command: ["/bin/bash","-c"]
       args:
         - |
           set -euo pipefail
