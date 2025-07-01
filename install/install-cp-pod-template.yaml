@@ -62,10 +62,12 @@ spec:
           ETCD_CACERT=/etc/ssl/etcd/ssl/ca.pem
           ETCD_CERT=/etc/ssl/etcd/ssl/node-${TARGET_NODE}.pem
           ETCD_KEY=/etc/ssl/etcd/ssl/node-${TARGET_NODE}-key.pem
+          ETCD_HOST=${TARGET_NODE}
+          ETCD_ENDPOINTS=https://${ETCD_HOST}:2379
 
           echo "[*] Fetching provider.yaml from etcd…"
           etcdctl get /akash-provider-paladin/provider.yaml \
-            --endpoints=https://<etcd-host>:2379 \
+            --endpoints="${ETCD_ENDPOINTS}" \
             --cacert="$ETCD_CACERT" \
             --cert="$ETCD_CERT" \
             --key="$ETCD_KEY" \
@@ -73,7 +75,7 @@ spec:
 
           echo "[*] Fetching price_script_generic.sh from etcd…"
           etcdctl get /akash-provider-paladin/price_script_generic.sh \
-            --endpoints=https://<etcd-host>:2379 \
+            --endpoints="${ETCD_ENDPOINTS}" \
             --cacert="$ETCD_CACERT" \
             --cert="$ETCD_CERT" \
             --key="$ETCD_KEY" \
