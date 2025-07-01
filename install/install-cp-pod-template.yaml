@@ -34,7 +34,7 @@ spec:
 
   containers:
     - name: paladin-installer
-      image: bitnami/kubectl:1.27.3-debian-11
+      image: bitnami/kubectl:latest
       securityContext:
         runAsUser: 0
       command: ["/bin/sh","-c"]
