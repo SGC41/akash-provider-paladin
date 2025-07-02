@@ -66,7 +66,45 @@ echo "📥 Fetching price_script_generic.sh…"
 etcdctl get /akash-provider-paladin/price_script_generic.sh $ETCD_FLAGS > "$PRICE_SCRIPT_FILE"
 chmod +x "$PRICE_SCRIPT_FILE"
 
-# ── “--local” revert logic ──────────────────────────────────
+
+
+# ── “--local” revert logic ──────────────────────────────────# ── Helm bootstrap ───────────────────────────────────────────
+HELM_VERSION="v3.11.0"
+REQUIRED_HELM_BIN="/usr/local/bin/helm"
+
+check_helm() {
+  if ! command -v helm &>/dev/null; then
+    echo "[helm] Not found — installing Helm $HELM_VERSION..."
+    install_helm
+  else
+    local current_ver
+    current_ver="$(helm version --short 2>/dev/null | sed 's/^v//' | cut -d+ -f1)"
+    # Compare major.minor only for sanity
+    if [[ "$current_ver" =~ ^3\.[0-9]+$ ]]; then
+      echo "[helm] Found Helm $current_ver — skipping install"
+      return
+    fi
+    echo "[helm] Unexpected Helm version '$current_ver' — reinstalling $HELM_VERSION..."
+    install_helm
+  fi
+}
+
+install_helm() {
+  cd /tmp
+  wget -q "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz"
+  tar -xzf "helm-${HELM_VERSION}-linux-amd64.tar.gz"
+  install linux-amd64/helm "$REQUIRED_HELM_BIN"
+  rm -rf linux-amd64 "helm-${HELM_VERSION}-linux-amd64.tar.gz"
+  echo "[helm] Installed Helm $HELM_VERSION at $REQUIRED_HELM_BIN"
+}
+
+# Initialize Akash Helm repo cleanly
+check_helm
+helm repo remove akash &>/dev/null || true
+helm repo add akash https://akash-network.github.io/helm-charts
+
+#helm check and or install done
+
 if [[ "$LOCAL_MODE" == true ]]; then
   echo "[rpc][local] revert mode: probing local RPC…"
   if curl --fail --silent --max-time 3 http://localhost:26657/status \
