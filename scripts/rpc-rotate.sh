@@ -40,11 +40,49 @@ ETCD_FLAGS="\
 --key=${ETCD_KEY} \
 --print-value-only"
 
-# ── Ensure local directory exists ────────────────────────────
+# __________________________________________________
+# ── Ensure $PROVIDER_HOME exists and required files are present ───────────────
+# _____________________________________________________
+
+echo "🧩 Verifying local configuration files in $PROVIDER_HOME..."
+
 mkdir -p "$PROVIDER_HOME"
 
+NEEDS_REFRESH=false
 
+if [[ ! -s "$FILE" ]]; then
+  echo "🔍 provider.yaml is missing or empty. Will re-fetch from etcd."
+  NEEDS_REFRESH=true
+fi
+
+if [[ ! -s "$PRICE_SCRIPT_FILE" ]]; then
+  echo "🔍 price_script_generic.sh is missing or empty. Will re-fetch from etcd."
+  NEEDS_REFRESH=true
+fi
+
+# Ensure price_script_generic.sh is executable
+if [[ -f "$PRICE_SCRIPT_FILE" && ! -x "$PRICE_SCRIPT_FILE" ]]; then
+  echo "🔧 Making price_script_generic.sh executable..."
+  chmod +x "$PRICE_SCRIPT_FILE"
+fi
+
+# Re-fetch files from etcd if needed
+if $NEEDS_REFRESH; then
+  echo "♻️  Fetching missing config files from etcd..."
+
+  echo "📥 Fetching provider.yaml…"
+  etcdctl get /akash-provider-paladin/provider.yaml $ETCD_FLAGS > "$FILE"
+
+  echo "📥 Fetching price_script_generic.sh…"
+  etcdctl get /akash-provider-paladin/price_script_generic.sh $ETCD_FLAGS > "$PRICE_SCRIPT_FILE"
+  chmod +x "$PRICE_SCRIPT_FILE"
+fi
+
+
+# _________________________________________________________________________
 # ── Check ETCD configuration files and error exit if missing ───────────────
+#_________________________________________________________________________
+
 echo "🧪 Checking etcd for provider.yaml…"
 if ! etcdctl get /akash-provider-paladin/provider.yaml $ETCD_FLAGS --print-value-only | grep -q .; then
   echo "⚠️  etcd missing provider.yaml — ending RPC rotate script" ; exit 1
