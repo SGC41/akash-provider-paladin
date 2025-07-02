@@ -252,27 +252,69 @@ for url in "${fallbacks[@]}"; do
 done
 
 # ── Validate node lines before rotation ──────────────────────
+# Validate node: lines for structural integrity
+# Will auto-normalize and re-validate if problems are found
+# ___________________________________
 
-echo "🔎 Verifying 'node:' line integrity in provider.yaml..."
+echo "🔎 Validating 'node:' lines in provider.yaml…"
 
-mapfile -t node_lines < <(
-  grep -En '^[[:space:]]*#?node:.*https?://.*' "$FILE" | grep -v '^[[:space:]]*##'
+validate_node_lines() {
+  mapfile -t node_lines < <(
+    grep -En '^[[:space:]]*#?node:[[:space:]]+http[s]?://[a-zA-Z0-9\.\-_:"/]+[[:space:]]*$' "$FILE" \
+      | grep -v '^[[:space:]]*##'
+  )
 
-)
+  for entry in "${node_lines[@]}"; do
+    ln="${entry%%:*}"
+    content="${entry#*:}"
 
-for entry in "${node_lines[@]}"; do
-  ln="${entry%%:*}"
-  content="${entry#*:}"
-  
-  # Basic checks
-  if ! [[ "$content" =~ ^[[:space:]]*#?node:[[:space:]]+http[s]?://[a-zA-Z0-9\.\-_:]+$ ]]; then
-    echo "⚠️  Malformed node line at $ln: '$content'" >&2
-    echo "❌ Aborting rotation to avoid corrupting provider.yaml" >&2
+    if ! [[ "$content" =~ ^[[:space:]]*#?node:[[:space:]]+\"?http[s]?://[a-zA-Z0-9\.\-_:]+\"?$ ]]; then
+      echo "❌ Malformed node line at $ln: '$content'"
+      return 1
+    fi
+  done
+}
+
+if ! validate_node_lines; then
+  echo "⚠️  Validation failed — attempting to normalize malformed node lines…"
+
+  # Run normalization logic
+  echo "🛠️  Checking for inline comments on node: lines…"
+
+  mapfile -t node_lines < <(
+    grep -En '^[[:space:]]*#?node:[[:space:]]+.*#.*$' "$FILE" | grep -v '^[[:space:]]*##'
+  )
+
+  for entry in "${node_lines[@]}"; do
+    ln="${entry%%:*}"
+    raw="${entry#*:}"
+    content="${raw%%#*}"
+    comment="# ${raw#*#}"
+
+    # Clean up whitespace
+    comment="$(echo "$comment" | sed 's/^[[:space:]]*#*/#/' | sed 's/[[:space:]]*$//')"
+    content="$(echo "$content" | sed 's/[[:space:]]*$//')"
+
+    echo "⚠️  Found inline comment on line $ln — rewriting safely"
+    sed -i "${ln}i # Inline comments on 'node:' lines may cause parsing issues." "$FILE"
+    sed -i "${ln}i ${comment}" "$FILE"
+    sed -i "${ln}s|.*|${content}|" "$FILE"
+  done
+
+  echo "🔁 Re-validating node lines after normalization…"
+
+  if ! validate_node_lines; then
+    echo "❌ Validation failed even after normalization — aborting."
     exit 1
+  else
+    echo "✅ Node lines validated successfully after normalization"
   fi
-done
+else
+  echo "✅ Node lines validated successfully"
+fi
 
-echo "✅ All 'node:' lines passed validation"
+
+# __________________________
 
 # ── Rotation logic ─────────────────────────────────────────
 mapfile -t nodes < <(
