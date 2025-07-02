@@ -26,7 +26,7 @@ PROVIDER_SRC="$HOME/provider/provider.yaml"
 PRICE_SCRIPT_SRC="$HOME/provider/price_script_generic.sh"
 
 echo "[*] Ensuring RPC rotation cronjob on local control plane…"
-CRONLINE="*/10 * * * * [ -f /tmp/rpc-rotate.do ] && /bin/bash /root/akash-provider-paladin/scripts/rpc-rotate.sh >> /var/log/rpc-rotate.log 2>&1 && rm -f /tmp/rpc-rotate.do"
+CRONLINE="*/5 * * * * [ -f /tmp/rpc-rotate.do ] && /bin/bash /root/akash-provider-paladin/scripts/rpc-rotate.sh >> /var/log/rpc-rotate.log 2>&1 && rm -f /tmp/rpc-rotate.do"
 crontab -l 2>/dev/null | grep -F -q "$CRONLINE" || \
   (crontab -l 2>/dev/null; echo "$CRONLINE") | crontab -
 
