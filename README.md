@@ -23,9 +23,6 @@ Uninstall Paladin v1
 curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/dev/uninstall-v1.sh | bash
 ```
 
-Manual install.
-go figure.... basically just follow the script... if it works... :P
-
 Check its logs for details on what its doing.
 ```
 kubectl logs akash-provider-paladin-0 -n akash-services
