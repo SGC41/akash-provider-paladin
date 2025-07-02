@@ -1,0 +1,93 @@
+# ── RPC Rotation Configuration (managed by rpc-rotate.sh) ──
+
+---
+from: "akash1n9shus0y57q42pz7l3vu46825w57thnraw3y9r"
+key: "LS0tLS1CRUdJTiBURU5ERVJNSU5UIFBSSVZBVEUgS0VZLS0tLS0Ka2RmOiBiY3J5cHQKc2FsdDogQ0Q3OTQ2NjI5Q0ExMzg0NTA5NUIwN0JDM0EyMkEyM0IKdHlwZTogc2VjcDI1NmsxCgpKT295NnIyTklKQzBFT25RM3R0ZitzRVV4dmFNUTlwOGRUL2FGUEtZUVJvYnlOSWx2WXJsbGJEN3NMQzQrQURpCmtoTjl5aVYydlNUOWY2bEpuRk5uN3VVZmlRTGFwN3cxS1FvbUVYST0KPWNNMzkKLS0tLS1FTkQgVEVOREVSTUlOVCBQUklWQVRFIEtFWS0tLS0tCg=="
+keysecret: "cFpRRGg0bFlUYUl2VXpJcHh3Y2FVdFklNCVAbgo="
+domain: "dcnorse2.ddns.net"
+# Local node is probed nightly and may be unblocked
+# Nodes prefixed with ## are skipped permanently
+# RPC node list (managed by rpc-rotate.sh)
+node: "https://rpc-akash.ecostake.com:443"
+#node: "https://akash-rpc.europlots.com:443"
+#node: "https://rpc.akashnet.net:443"
+#node: http://akash-node-1:26657
+#node: https://akash-rpc.polkachu.com:443
+withdrawalperiod: 12h
+attributes:
+- key: host
+  value: akash
+- key: tier
+  value: community
+- key: organization
+  value: DCnorse
+- key: location-type
+  value: server-room
+- key: city
+  value: AAR
+- key: timezone
+  value: utc+2
+- key: tls-ssl-support
+  value: no
+- key: region
+  value: eu-north
+- key: location-region
+  value: eu-north
+- key: country
+  value: DK
+- key: email
+  value: dcnorse@tutanota.com
+- key: cpu
+  value: amd
+- key: capabilities/cpu
+  value: amd
+- key: capabilities/gpu
+  value: nvidia
+- key: capabilities/gpu/vendor/nvidia/model/p100
+  value: true
+- key: capabilities/gpu/vendor/nvidia/model/p100/ram/16Gi
+  value: true
+- key: capabilities/gpu/vendor/nvidia/model/p100/ram/16Gi/interface/pcie
+  value: true
+- key: capabilities/gpu/vendor/nvidia/model/p100/interface/pcie
+  value: true
+- key: cuda
+  value: 12.8
+#- key: feat-persistent-storage
+#  value: true
+#- key: capabilities/storage/3/class
+#  value: beta3
+#- key: capabilities/storage/3/persistent
+#  value: true
+#- key: capabilities/storage/4/class
+#  value: ram
+#- key: capabilities/storage/4/persistent
+#  value: false
+- key: capabilities/memory
+  value: ddr4ecc
+- key: capabilities/cpu/arch
+  value: x86-64
+- key: network-speed-up
+  value: 1000
+- key: network-speed-down
+  value: 1000
+#- key: console/trials
+#  value: true
+
+website: none
+price_target_cpu: 1.58
+price_target_endpoint: 0.2
+price_target_gpu_mappings: p100=55,*=55
+price_target_hd_ephemeral: 0.016
+price_target_hd_pers_hdd: 0.005
+price_target_hd_pers_nvme: 0.034
+price_target_hd_pers_ssd: 0.01
+price_target_ip: 5
+price_target_lease_minimum: 10
+price_target_memory: 0.13
+
+monitor:
+  maxRetries: 15026
+
+
+
