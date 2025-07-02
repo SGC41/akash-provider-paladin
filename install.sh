@@ -4,13 +4,11 @@ set -euxo pipefail
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
 # ───────────────────────────────────────────────────────
-
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 BRANCH="dev"
 TARGET_DIR="$HOME/akash-provider-paladin"
 MANIFEST_TEMPLATE="$TARGET_DIR/install/install-cp-pod-template.yaml"
 TMP_MANIFEST="/tmp/secondary-cp-install.yaml"
-
 
 # ── Dynamic etcd cert detection ──────────────────────────────
 NODE_SHORT=$(hostname -s)
@@ -25,10 +23,6 @@ done
 PROVIDER_SRC="$HOME/provider/provider.yaml"
 PRICE_SCRIPT_SRC="$HOME/provider/price_script_generic.sh"
 
-echo "[*] Ensuring RPC rotation cronjob on local control plane…"
-CRONLINE="*/3 * * * * [ -f /tmp/rpc-rotate.do ] && /bin/bash /root/akash-provider-paladin/scripts/rpc-rotate.sh >> /var/log/rpc-rotate.log 2>&1 && rm -f /tmp/rpc-rotate.do"
-crontab -l 2>/dev/null | grep -F -q "$CRONLINE" || \
-  (crontab -l 2>/dev/null; echo "$CRONLINE") | crontab -
 
 
 # ───────────────────────────────────────────────────────
@@ -86,8 +80,18 @@ etcdctl put /akash-provider-paladin/price_script_generic.sh \
   --cert="$ETCD_CERT" \
   --key="$ETCD_KEY" < "$PRICE_SCRIPT_SRC"
 
-# ───────────────────────────────────────────────────────
-# Helm install or upgrade
+# ______________________________
+# Cronjob injection and clean
+# _________________________________
+
+echo "[*] Ensuring RPC rotation cronjob on local control plane..."
+
+CRONLINE="*/3 * * * * [ -f /tmp/rpc-rotate.do ] && /bin/bash \"$TARGET_DIR/scripts/rpc-rotate.sh\" >> /var/log/rpc-rotate.log 2>&1 && rm -f /tmp/rpc-rotate.do"
+SCRIPT_PATH="$TARGET_DIR/scripts/rpc-rotate.sh"
+
+# Remove any existing cron jobs that reference the script (regardless of timing)
+crontab -l 2>/dev/null | grep -v "$SCRIPT_PATH" | { cat; echo "$CRONLINE"; } | crontab -
+
 # ───────────────────────────────────────────────────────
 
 echo "🚀 Installing or upgrading Helm chart..."
