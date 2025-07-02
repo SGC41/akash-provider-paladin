@@ -43,6 +43,21 @@ ETCD_FLAGS="\
 # ── Ensure local directory exists ────────────────────────────
 mkdir -p "$PROVIDER_HOME"
 
+
+# ── Check and upload provider.yaml if missing ───────────────
+echo "🧪 Checking etcd for provider.yaml…"
+if ! etcdctl get /akash-provider-paladin/provider.yaml $ETCD_FLAGS --print-value-only | grep -q .; then
+  echo "⚠️  etcd missing provider.yaml — uploading local copy"
+  etcdctl put /akash-provider-paladin/provider.yaml $ETCD_FLAGS < "$HOME/provider/provider.yaml"
+fi
+
+# ── Check and upload price_script_generic.sh if missing ─────
+echo "🧪 Checking etcd for price_script_generic.sh…"
+if ! etcdctl get /akash-provider-paladin/price_script_generic.sh $ETCD_FLAGS --print-value-only | grep -q .; then
+  echo "⚠️  etcd missing price_script_generic.sh — uploading local copy"
+  etcdctl put /akash-provider-paladin/price_script_generic.sh $ETCD_FLAGS < "$HOME/provider/price_script_generic.sh"
+fi
+
 # ── Fetch current configs from ETCD ──────────────────────────
 echo "📥 Fetching provider.yaml…"
 etcdctl get /akash-provider-paladin/provider.yaml $ETCD_FLAGS > "$FILE"
