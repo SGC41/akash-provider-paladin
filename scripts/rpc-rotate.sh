@@ -17,10 +17,11 @@ if [[ "${1:-}" == "--local" ]]; then
   shift
 fi
 
-PROVIDER_HOME="${1:-$HOME/akash-provider-paladin}"
-FILE="$PROVIDER_HOME/provider.yaml"
-PRICE_SCRIPT_FILE="$PROVIDER_HOME/price_script_generic.sh"
-SCRIPT_DIR="$PROVIDER_HOME/scripts/"
+PALADIN_HOME="${1:-$HOME/akash-provider-paladin}"
+FILE="$PALADIN_HOME/provider.yaml"
+PRICE_SCRIPT_FILE="$PALADIN_HOME/price_script_generic.sh"
+SCRIPT_DIR="$PALADIN_HOME/scripts/"
+PROVIDER_HOME="$HOME/provider"
 DATE_TAG="$(date +%m-%d)"
 BACKUP="$FILE.$DATE_TAG"
 
@@ -40,12 +41,13 @@ ETCD_FLAGS="\
 --key=${ETCD_KEY} \
 --print-value-only"
 
-# __________________________________________________
-# ── Ensure $PROVIDER_HOME exists and required files are present ───────────────
+# _____________________________________________________
+# ── Ensure $PALADIN_HOME and $PROVIDER_HOME exists and required files are present ───────────────
 # _____________________________________________________
 
-echo "🧩 Verifying local configuration files in $PROVIDER_HOME..."
+echo "🧩 Verifying local configuration files in $PALADIN_HOME..."
 
+mkdir -p "$PALADIN_HOME"
 mkdir -p "$PROVIDER_HOME"
 
 NEEDS_REFRESH=false
@@ -77,6 +79,28 @@ if $NEEDS_REFRESH; then
   etcdctl get /akash-provider-paladin/price_script_generic.sh $ETCD_FLAGS > "$PRICE_SCRIPT_FILE"
   chmod +x "$PRICE_SCRIPT_FILE"
 fi
+
+# Copy critical files to $PROVIDER_HOME if missing
+[[ -f "$PROVIDER_HOME/provider.yaml" ]] || cp "$FILE" "$PROVIDER_HOME/provider.yaml"
+[[ -f "$PROVIDER_HOME/price_script_generic.sh" ]] || cp "$PRICE_SCRIPT_FILE" "$PROVIDER_HOME/price_script_generic.sh"
+
+# Copy update* scripts from local scripts dir to provider home if missing
+if [[ -d "$SCRIPT_DIR" ]]; then
+  for update_script in "$SCRIPT_DIR"/update*; do
+    [[ -f "$update_script" ]] || continue
+    base_name="$(basename "$update_script")"
+    target_path="$PROVIDER_HOME/$base_name"
+
+    if [[ ! -f "$target_path" ]]; then
+      cp "$update_script" "$target_path"
+      echo "➕ copied $base_name to $PROVIDER_HOME"
+    fi
+  done
+else
+  echo "⚠️  Script source directory $SCRIPT_DIR not found — skipping update* copy"
+fi
+
+# __________________________
 
 
 # _________________________________________________________________________
@@ -250,71 +274,6 @@ for url in "${fallbacks[@]}"; do
     last_line=$((last_line+1))
   fi
 done
-
-# ── Validate node lines before rotation ──────────────────────
-# Validate node: lines for structural integrity
-# Will auto-normalize and re-validate if problems are found
-# ___________________________________
-
-echo "🔎 Validating 'node:' lines in provider.yaml…"
-
-validate_node_lines() {
-  mapfile -t node_lines < <(
-    grep -En '^[[:space:]]*#?node:[[:space:]]+http[s]?://[a-zA-Z0-9\.\-_:"/]+[[:space:]]*$' "$FILE" \
-      | grep -v '^[[:space:]]*##'
-  )
-
-  for entry in "${node_lines[@]}"; do
-    ln="${entry%%:*}"
-    content="${entry#*:}"
-
-    if ! [[ "$content" =~ ^[[:space:]]*#?node:[[:space:]]+\"?http[s]?://[a-zA-Z0-9\.\-_:]+\"?$ ]]; then
-      echo "❌ Malformed node line at $ln: '$content'"
-      return 1
-    fi
-  done
-}
-
-if ! validate_node_lines; then
-  echo "⚠️  Validation failed — attempting to normalize malformed node lines…"
-
-  # Run normalization logic
-  echo "🛠️  Checking for inline comments on node: lines…"
-
-  mapfile -t node_lines < <(
-    grep -En '^[[:space:]]*#?node:[[:space:]]+.*#.*$' "$FILE" | grep -v '^[[:space:]]*##'
-  )
-
-  for entry in "${node_lines[@]}"; do
-    ln="${entry%%:*}"
-    raw="${entry#*:}"
-    content="${raw%%#*}"
-    comment="# ${raw#*#}"
-
-    # Clean up whitespace
-    comment="$(echo "$comment" | sed 's/^[[:space:]]*#*/#/' | sed 's/[[:space:]]*$//')"
-    content="$(echo "$content" | sed 's/[[:space:]]*$//')"
-
-    echo "⚠️  Found inline comment on line $ln — rewriting safely"
-    sed -i "${ln}i # Inline comments on 'node:' lines may cause parsing issues." "$FILE"
-    sed -i "${ln}i ${comment}" "$FILE"
-    sed -i "${ln}s|.*|${content}|" "$FILE"
-  done
-
-  echo "🔁 Re-validating node lines after normalization…"
-
-  if ! validate_node_lines; then
-    echo "❌ Validation failed even after normalization — aborting."
-    exit 1
-  else
-    echo "✅ Node lines validated successfully after normalization"
-  fi
-else
-  echo "✅ Node lines validated successfully"
-fi
-
-
-# __________________________
 
 # ── Rotation logic ─────────────────────────────────────────
 mapfile -t nodes < <(
