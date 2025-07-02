@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.2.5
+# Akash Provider Paladin v2.2.6
 Paladin will help keep providers operational.
 - v2.2.5 cluster install
 - v2.2 Feature added RPC rotation aka RPC node failover.
@@ -30,3 +30,11 @@ Check its logs for details on what its doing.
 ```
 kubectl logs akash-provider-paladin-0 -n akash-services
 ```
+
+Notes:
+Versioning is a bit sloppy (still learning), the kubectl log can only show logs for the pod, which isn't everything, since RPC rotates happen on control planes.
+each control plane will log its RPC-rotate.sh runs in /var/log/rpc-rotate.log
+
+if you are running v1, you should manually remove it or use the uninstall script for v1.
+on V2.0 or later just rerun the install and it will upgrade to the latest version.
+Enjoy.  and let me know if there are any issues.
