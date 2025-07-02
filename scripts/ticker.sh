@@ -11,7 +11,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 while true; do
   echo "============================"
   echo "Script cycle started at: $(date)"
-  echo "v2.2.4"
+  echo "v2.2.5"
   echo "============================"
 
   # ── RPC Rotation Window: At 03:00–03:04 ──
