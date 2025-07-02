@@ -15,12 +15,12 @@ will be adding more features over time.
 
 Installation simply run the curl command from a single control plane node.
 ```shell
-curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/dev/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/main/install.sh | bash
 ```
 Uninstall Paladin v1
 
 ```shell
-curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/dev/uninstall-v1.sh | bash
+curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/main/uninstall-v1.sh | bash
 ```
 
 Check its logs for details on what its doing.
