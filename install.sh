@@ -11,9 +11,16 @@ TARGET_DIR="$HOME/akash-provider-paladin"
 MANIFEST_TEMPLATE="$TARGET_DIR/install/install-cp-pod-template.yaml"
 TMP_MANIFEST="/tmp/secondary-cp-install.yaml"
 
+
+# ── Dynamic etcd cert detection ──────────────────────────────
+NODE_SHORT=$(hostname -s)
 ETCD_CACERT="/etc/ssl/etcd/ssl/ca.pem"
-ETCD_CERT="/etc/ssl/etcd/ssl/node-node1.pem"
-ETCD_KEY="/etc/ssl/etcd/ssl/node-node1-key.pem"
+ETCD_CERT="/etc/ssl/etcd/ssl/node-${NODE_SHORT}.pem"
+ETCD_KEY="/etc/ssl/etcd/ssl/node-${NODE_SHORT}-key.pem"
+
+for f in "$ETCD_CACERT" "$ETCD_CERT" "$ETCD_KEY"; do
+  [[ -r "$f" ]] || { echo "❌ Cannot read etcd file: $f" >&2; exit 1; }
+done
 
 PROVIDER_SRC="$HOME/provider/provider.yaml"
 PRICE_SCRIPT_SRC="$HOME/provider/price_script_generic.sh"
