@@ -251,6 +251,29 @@ for url in "${fallbacks[@]}"; do
   fi
 done
 
+# ── Validate node lines before rotation ──────────────────────
+
+echo "🔎 Verifying 'node:' line integrity in provider.yaml..."
+
+mapfile -t node_lines < <(
+  grep -En '^[[:space:]]*#?node:.*https?://.*' "$FILE" | grep -v '^[[:space:]]*##'
+
+)
+
+for entry in "${node_lines[@]}"; do
+  ln="${entry%%:*}"
+  content="${entry#*:}"
+  
+  # Basic checks
+  if ! [[ "$content" =~ ^[[:space:]]*#?node:[[:space:]]+http[s]?://[a-zA-Z0-9\.\-_:]+$ ]]; then
+    echo "⚠️  Malformed node line at $ln: '$content'" >&2
+    echo "❌ Aborting rotation to avoid corrupting provider.yaml" >&2
+    exit 1
+  fi
+done
+
+echo "✅ All 'node:' lines passed validation"
+
 # ── Rotation logic ─────────────────────────────────────────
 mapfile -t nodes < <(
   grep -En '^[[:space:]]*#?node:' "$FILE" | grep -v '^[[:space:]]*##'
