@@ -60,8 +60,8 @@ spec:
           mkdir -p /root/provider
 
           echo "[*] Ensuring RPC rotation cronjob…"
-          grep -Fq '*/10 * * * * [ -f /tmp/rpc-rotate.do ] && /bin/bash /root/akash-provider-paladin/scripts/rpc-rotate.sh >> /var/log/rpc-rotate.log 2>&1 && rm -f /tmp/rpc-rotate.do' /var/spool/cron/crontabs/root || \
-          echo '*/10 * * * * [ -f /tmp/rpc-rotate.do ] && /bin/bash /root/akash-provider-paladin/scripts/rpc-rotate.sh >> /var/log/rpc-rotate.log 2>&1 && rm -f /tmp/rpc-rotate.do' >> /var/spool/cron/crontabs/root
+          grep -Fq '*/5 * * * * [ -f /tmp/rpc-rotate.do ] && /bin/bash /root/akash-provider-paladin/scripts/rpc-rotate.sh >> /var/log/rpc-rotate.log 2>&1 && rm -f /tmp/rpc-rotate.do' /var/spool/cron/crontabs/root || \
+          echo '*/5 * * * * [ -f /tmp/rpc-rotate.do ] && /bin/bash /root/akash-provider-paladin/scripts/rpc-rotate.sh >> /var/log/rpc-rotate.log 2>&1 && rm -f /tmp/rpc-rotate.do' >> /var/spool/cron/crontabs/root
 
 
 
