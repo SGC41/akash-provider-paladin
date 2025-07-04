@@ -127,7 +127,9 @@ chmod +x "$PRICE_SCRIPT_FILE"
 
 
 
-# ── “--local” revert logic ──────────────────────────────────# ── Helm bootstrap ───────────────────────────────────────────
+# ── Helm bootstrap ───────────────────────────────────────────
+echo "starting checking helm"
+
 HELM_VERSION="v3.11.0"
 REQUIRED_HELM_BIN="/usr/local/bin/helm"
 
@@ -162,61 +164,57 @@ check_helm
 helm repo remove akash &>/dev/null || true
 helm repo add akash https://akash-network.github.io/helm-charts
 
-#helm check and or install done
+echo "helm segment done"
 
-if [[ "$LOCAL_MODE" == true ]]; then
-  echo "[rpc][local] revert mode: probing local RPC…"
-  if curl --fail --silent --max-time 3 http://localhost:26657/status \
-       | grep -q '"catching_up": false'; then
+# __________________________
+# 
+# --local flag part +
+# local rpc node health logic check, wants 3hours of stability synced status...
+# if verified good will set as active in ~/akash_provider_paladin/provider.yaml
+# and rpc rotation will be done, in later code block
+#
+# needs improvements.
+# ______________________________
+echo "Checking local RPC for viability"
 
-    now=$(date +%s)
-    TS_FILE="/tmp/local_rpc_healthy_since"
+# 🌐 Define target pod and namespace
+POD_NAME="akash-node-1-0"
+NAMESPACE="akash-services"
 
-    if [[ ! -f "$TS_FILE" ]]; then
-      echo "$now" > "$TS_FILE"
-      echo "[rpc][local] first healthy stamp at $(date -d "@$now")"
-      exit 0
-    fi
+# 🛜 Get pod IP from Kubernetes
+RPC_IP=$(kubectl get pod "$POD_NAME" -n "$NAMESPACE" -o jsonpath='{.status.podIP}')
 
-    last=$(<"$TS_FILE")
-    elapsed=$(( now - last ))
-
-    if (( elapsed >= 3*3600 )); then
-      echo "[rpc][local] healthy for $((elapsed/3600))h — reverting to local RPC"
-      # comment out all node: lines
-      mapfile -t lines < <(
-        grep -En '^[[:space:]]*#?node:' "$FILE" | grep -v '^[[:space:]]*##'
-      )
-      for entry in "${lines[@]}"; do
-        ln="${entry%%:*}"
-        sed -i "${ln}s|^[[:space:]]*node:|#node:|" "$FILE"
-      done
-      # unblock your local node
-      ln=$(
-        grep -En "^#?node:.*localhost.*localnode" "$FILE" \
-        | head -n1 | cut -d: -f1
-      )
-      if [[ -n "$ln" ]]; then
-        sed -i "${ln}s|^#node:|node:|" "$FILE"
-        echo "[rpc][local] activated localnode (line $ln)"
-      else
-        echo "[rpc][local] ⚠️  no localnode entry found"
-      fi
-
-      rm -f "$TS_FILE"
-      "$SCRIPT_DIR/update-provider-configuration.sh"
-      exit 0
-    else
-      remain=$(( (3*3600 - elapsed)/60 ))
-      echo "[rpc][local] warming up: $remain min until revert"
-      exit 0
-    fi
-  else
-    echo "[rpc][local] probe failed — resetting timer"
-    rm -f /tmp/local_rpc_healthy_since
-    exit 0
-  fi
+if [[ -z "$RPC_IP" ]]; then
+  echo "[rpc] ❌ Pod IP not found — is the pod running?"
+  exit 1
 fi
+
+# 🧪 Query the node's /status endpoint
+STATUS_URL="http://${RPC_IP}:26657/status"
+RESPONSE=$(curl -s --max-time 5 "$STATUS_URL")
+
+if [[ -z "$RESPONSE" ]]; then
+  echo "[rpc] ❌ No response from node at $RPC_IP:26657"
+  exit 1
+fi
+
+# 📆 Extract sync info
+CATCHING_UP=$(echo "$RESPONSE" | jq -r '.result.sync_info.catching_up')
+STARTED_AT=$(echo "$RESPONSE" | jq -r '.result.sync_info.earliest_block_time')
+
+if [[ "$CATCHING_UP" != "false" ]]; then
+  echo "[rpc] ⚠️ Node is still catching up — not considered stable"
+  exit 0
+fi
+
+# ⏱️ Calculate uptime in hours
+STARTED_SEC=$(date -d "$STARTED_AT" +%s)
+NOW_SEC=$(date +%s)
+UPTIME_HR=$(( (NOW_SEC - STARTED_SEC) / 3600 ))
+
+echo "[rpc] ✅ Node has been synced since $STARTED_AT"
+echo "[rpc] ⏱️ RPC node has been stable for ~${UPTIME_HR} hours"
+echo "local rpc viable"
 
 # ── Daily backup ────────────────────────────────────────────
 if [[ ! -e "$BACKUP" ]]; then
