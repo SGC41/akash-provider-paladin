@@ -5,7 +5,7 @@ set -euo pipefail
 # Akash Provider Paladin Installer — Control Plane Bootstrap
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
-BRANCH="dev"
+BRANCH="stable"
 TARGET_DIR="$HOME/akash-provider-paladin"
 MANIFEST_TEMPLATE="$TARGET_DIR/install/install-cp-pod-template.yaml"
 TMP_MANIFEST="/tmp/secondary-cp-install.yaml"
