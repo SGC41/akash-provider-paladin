@@ -2,7 +2,7 @@
 #
 #  v2.2.6
 
-set -euxo pipefail
+set -euo pipefail
 
 PROVIDER_SRC="$HOME/akash-provider-paladin/provider.yaml"
 PRICE_SCRIPT_SRC="$HOME/akash-provider-paladin/price_script_generic.sh"
