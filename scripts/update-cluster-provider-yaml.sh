@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+!/usr/bin/env bash
 set -euo pipefail
 
 export ETCDCTL_API=3
@@ -6,8 +6,8 @@ export ETCDCTL_API=3
 # ───────────────────────────────────────────────────────
 # Paths to user-edited files
 # ───────────────────────────────────────────────────────
-PROVIDER_SRC="$HOME/provider/provider.yaml"
-PRICE_SCRIPT_SRC="$HOME/provider/price_script_generic.sh"
+PROVIDER_SRC="$HOME/akash-provider-paladin/provider.yaml"
+PRICE_SCRIPT_SRC="$HOME/akash-provider-paladin/price_script_generic.sh"
 
 # ───────────────────────────────────────────────────────
 # Dynamically select etcd certs based on node shortname
@@ -50,3 +50,4 @@ etcdctl \
   put /akash-provider-paladin/price_script_generic.sh < "$PRICE_SCRIPT_SRC"
 
 echo "✅ All updates pushed successfully."
+
