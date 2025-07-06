@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # rpc-rotate.sh v2.3.0
-
 set -euo pipefail
 export ETCDCTL_API=3
 
@@ -10,15 +9,14 @@ CFG="$PALADIN_HOME/provider.yaml"
 PRICE="$PALADIN_HOME/price_script_generic.sh"
 SCRIPTS="$PALADIN_HOME/scripts"
 STATE="$PALADIN_HOME/.last_rpc_rotate"
-
 TODAY=$(date +%F)
 MIN_HOURS=3
 
 LOCAL_POD="akash-node-1-0"
 LOCAL_NS="akash-services"
 LOCAL_ALIAS="http://localhost:26657"
-
 NODE=$(hostname -s)
+
 CA="/etc/ssl/etcd/ssl/ca.pem"
 CERT="/etc/ssl/etcd/ssl/node-${NODE}.pem"
 KEY="/etc/ssl/etcd/ssl/node-${NODE}-key.pem"
@@ -27,10 +25,8 @@ ETCD_FLAGS="--cacert=$CA --cert=$CERT --key=$KEY"
 # ── Sync provider.yaml & price_script from etcd ────────────
 fetch_and_prep() {
   mkdir -p "$PALADIN_HOME"
-  etcdctl $ETCD_FLAGS get /akash-provider-paladin/provider.yaml \
-    --print-value-only > "$CFG"
-  etcdctl $ETCD_FLAGS get /akash-provider-paladin/price_script_generic.sh \
-    --print-value-only > "$PRICE"
+  etcdctl $ETCD_FLAGS get /akash-provider-paladin/provider.yaml --print-value-only > "$CFG"
+  etcdctl $ETCD_FLAGS get /akash-provider-paladin/price_script_generic.sh --print-value-only > "$PRICE"
   chmod +x "$PRICE"
 }
 
@@ -65,18 +61,17 @@ check_rpc() {
   [[ $catch != "false" ]] && return 1
   t0=$(jq -r .result.sync_info.earliest_block_time <<<"$resp")
   t0=$(date -d "$t0" +%s); now=$(date +%s)
-  echo $(( (now - t0)/3600 ))
+  echo $(( (now - t0) / 3600 ))
 }
 
-# ── Smart circular rotation with pod IP health check ───────
+# ── Rotation logic with local preference support ───────────
 rotate_rpc() {
-  local entries active_idx=-1 url line ln_active ln_next hrs ip next_idx probe_url
+  local entries active_idx=-1 url line ln_active ln_next hrs ip next_idx probe_url force_next_idx=-1
 
   mapfile -t entries < <(
     grep -nE '^[[:space:]]*#?node:' "$CFG" |
     grep -v -E '^[[:space:]]*#([[:space:]]*#)+[[:space:]]*node:'
   )
-
   (( ${#entries[@]} == 0 )) && {
     echo "[rpc] No eligible node entries"
     return 1
@@ -88,9 +83,19 @@ rotate_rpc() {
     }
   done
 
+  if [[ "${FORCE_LOCAL:-}" == "1" ]]; then
+    for i in "${!entries[@]}"; do
+      [[ "${entries[i]}" =~ http://localhost:26657|akash-node-1 ]] && {
+        echo "[rpc] First run → preferring local node via rotation logic"
+        force_next_idx=$i
+        active_idx=-1
+        break
+      }
+    done
+  fi
+
   for ((offset=1; offset<=${#entries[@]}; offset++)); do
-    next_idx=$(( (active_idx + offset) % ${#entries[@]} ))
-    ln_active="${entries[active_idx]%%:*}"
+    next_idx=$(( force_next_idx >= 0 ? force_next_idx : (active_idx + offset) % ${#entries[@]} ))
     ln_next="${entries[next_idx]%%:*}"
     line="${entries[next_idx]#*:}"
 
@@ -99,23 +104,29 @@ rotate_rpc() {
     probe_url="$url"
 
     if [[ "$url" =~ localhost || "$url" =~ akash-node-1 ]]; then
-      ip=$(kubectl get pod "$LOCAL_POD" -n "$LOCAL_NS" \
-           -o jsonpath='{.status.podIP}' 2>/dev/null || echo "")
+      ip=$(kubectl get pod "$LOCAL_POD" -n "$LOCAL_NS" -o jsonpath='{.status.podIP}' 2>/dev/null || echo "")
       if [[ -n "$ip" ]]; then
         echo "[rpc] Substituting $url → $ip for health check"
         probe_url="http://${ip}:26657"
       else
-        echo "[rpc] Could not resolve pod IP for akash-node-1-0"
+        echo "[rpc] Could not resolve pod IP for $LOCAL_POD"
       fi
     fi
 
     hrs=$(check_rpc "$probe_url") || {
       echo "[rpc] $probe_url failed health check — skipping"
+      (( force_next_idx >= 0 )) && return 1
       continue
     }
 
     echo "[rpc] Activating $url (${hrs}h)"
-    (( active_idx >= 0 )) && sed -i "${ln_active}s|^[[:space:]]*node:|#node:|" "$CFG"
+    if (( force_next_idx >= 0 )); then
+      ln_old=$(grep -nE '^[[:space:]]*node:' "$CFG" | cut -d: -f1 | head -1)
+      sed -i "${ln_old}s|^[[:space:]]*node:|#node:|" "$CFG"
+    else
+      sed -i "${entries[active_idx]%%:*}s|^[[:space:]]*node:|#node:|" "$CFG"
+    fi
+
     sed -i "${ln_next}s|^[[:space:]]*#[[:space:]]*node:|node:|" "$CFG"
 
     "$SCRIPTS/update-provider-configuration.sh"
@@ -134,9 +145,7 @@ annotate_provider_yaml
 
 if [[ ! -f "$STATE" || "$(cat "$STATE")" != "$TODAY" ]]; then
   echo "[rpc] First run today → prefer local"
-  if rotate_rpc; then
-    echo "$TODAY" > "$STATE"; exit 0
-  fi
+  FORCE_LOCAL=1 rotate_rpc && echo "$TODAY" > "$STATE" && exit 0
   echo "[rpc] Rotation attempt failed on first run"
 else
   echo "[rpc] Subsequent run → rotating"
