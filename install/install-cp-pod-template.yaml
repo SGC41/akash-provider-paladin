@@ -54,7 +54,7 @@ spec:
 
           echo "[*] Cloning paladin repo onto host…"
           [[ -d /root/akash-provider-paladin ]] && rm -rf /root/akash-provider-paladin
-          git clone -b dev https://github.com/SGC41/akash-provider-paladin.git \
+          git clone -b stable https://github.com/SGC41/akash-provider-paladin.git \
             /root/akash-provider-paladin
 
           mkdir -p /root/provider
