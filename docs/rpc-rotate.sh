@@ -1,5 +1,3 @@
-Absolutely—here's a cleanly formatted `rpc-rotate.md` ready to drop into a `docs/` or `documentation/` folder in your GitHub repo. This file provides a thorough overview, perfect for onboarding contributors, documenting architecture, or just future-proofing your own deployment.
-
 ---
 
 ## 📦 Akash RPC Rotation Tool: `rpc-rotate.sh`
@@ -140,5 +138,3 @@ Returns:
 - Comment toggle confirmation
 
 ---
-
-Let me know if you'd like me to generate a `docs/index.md` that links this file and any future utilities, or embed diagrams showing rotation flow. This script deserves top-shelf documentation.
