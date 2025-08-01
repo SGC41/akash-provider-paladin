@@ -6,8 +6,8 @@ metadata:
     buildID: {{ .Values.buildID | quote }}
 rules:
   - apiGroups: ["apps"]
-    resources: ["statefulsets"]
-    verbs: ["get", "list", "patch"]
+    resources: ["statefulsets", "statefulsets/scale"]
+    verbs: ["get", "list", "update", "patch"]
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["get", "list","watch", "delete"]

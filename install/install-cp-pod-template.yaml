@@ -1,3 +1,4 @@
+#v2.2.9
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -60,8 +61,10 @@ spec:
           mkdir -p /root/provider
           echo "Adding cronjob"
           CRONLINE_CMD='/bin/bash /root/akash-provider-paladin/scripts/rpc-rotate.sh'
+          NEW_CRONLINE_CMD='/bin/bash /root/akash-provider-paladin/scripts/ticker-control-plane.sh'
           CRONTAB_FILE='/var/spool/cron/crontabs/root'
-          NEW_CRONLINE="*/3 * * * * [ -f /tmp/rpc-rotate.do ] && $CRONLINE_CMD >> /var/log/rpc-rotate.log 2>&1 && rm -f /tmp/rpc-rotate.do"
+          NEW_CRONLINE="*/3 * * * * [ -f /tmp/control-plane.do ] && $NEW_CRONLINE_CMD >> /var/log/paladin.log 2>&1 && rm -f /tmp/control-plane.do"
+
 
           # Remove any existing entry that references the same script path
           sed -i "\|$CRONLINE_CMD|d" "$CRONTAB_FILE"
@@ -69,12 +72,18 @@ spec:
           # Append the new cronline
           echo "$NEW_CRONLINE" >> "$CRONTAB_FILE"
 
-
+          # Push control plane install trigger
+          echo "install" > "/host/tmp/control-plane.do"
           echo "[✓] Install complete for $TARGET_NODE"
 
       volumeMounts:
         - name: root-home
           mountPath: /root
+
+        - name: host-tmp
+          mountPath: /host/tmp
+            readOnly: false
+
         - name: host-crontab
           mountPath: /var/spool/cron/crontabs
 
@@ -83,6 +92,12 @@ spec:
       hostPath:
         path: /root
         type: Directory
+
+    - name: host-tmp
+      hostPath:
+        path: /tmp
+        type: Director
+
     - name: host-crontab
       hostPath:
         path: /var/spool/cron/crontabs

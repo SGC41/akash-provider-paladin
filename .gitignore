@@ -25,6 +25,9 @@ helm-release.yaml
 # Ignore sensitive files (adjust as needed)
 .env
 secrets.yaml
+provider.yaml
+provider*.yaml
+price_script_generic.sh
 *.crt
 *.key
 *.pem

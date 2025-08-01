@@ -3,6 +3,7 @@ set -euo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
+# v2.2.9
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 BRANCH="stable"
@@ -48,6 +49,15 @@ fi
 cd "$TARGET_DIR"
 echo "📌 Working directory: $(pwd)"
 
+          #prereq shared install - new feature.
+          if "$HOME/akash-provider-paladin/install/prereq-install.sh"; then
+            echo "Subscript ran successfully"
+          else
+            echo "Error - prereq install failed"
+            exit 1
+          fi
+
+
 # Dynamically select etcd certs based on node shortname
 NODE_SHORTNAME=$(hostname -s)
 
@@ -60,7 +70,7 @@ for FILE in "$ETCD_CERT" "$ETCD_KEY" "$ETCD_CACERT"; do
   [[ -f "$FILE" ]] || { echo "❌ Missing required etcd cert/key: $FILE"; exit 1; }
 done
 
-
+sudo apt install jq -y
 # ───────────────────────────────────────────────────────
 # Upload config to etcd
 # ───────────────────────────────────────────────────────
@@ -86,7 +96,7 @@ etcdctl put /akash-provider-paladin/price_script_generic.sh \
 
 echo "[*] Ensuring RPC rotation cronjob on local control plane..."
 
-CRONLINE="*/3 * * * * [ -f /tmp/rpc-rotate.do ] && /bin/bash \"$TARGET_DIR/scripts/rpc-rotate.sh\" >> /var/log/rpc-rotate.log 2>&1 && rm -f /tmp/rpc-rotate.do"
+CRONLINE="*/3 * * * * [ -f /tmp/control-plane.do ] && /bin/bash \"$TARGET_DIR/scripts/ticker-control-plane.sh\" >> /var/log/paladin.log 2>&1 && rm -f /tmp/control-plane.do"
 SCRIPT_PATH="$TARGET_DIR/scripts/rpc-rotate.sh"
 
 # Remove any existing cron jobs that reference the script (regardless of timing)

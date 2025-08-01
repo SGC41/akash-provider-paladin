@@ -1,7 +1,41 @@
 #!/usr/bin/env bash
-# rpc-rotate.sh v2.3.0
+# rpc-rotate.sh v2.3.3
 set -euo pipefail
 export ETCDCTL_API=3
+
+
+# ── Default Flags ────────────────────────────────────────────────────────
+DEBUG=false
+LOCAL_MODE=false
+CHECK_ONLY=false
+
+DO_FILE="/tmp/rpc-rotate.do"
+ALLOWED_VARS=("DEBUG" "LOCAL_MODE" "CHECK_ONLY")
+
+log_stamp() {
+  echo "[$(date -u +"%Y-%m-%d %H:%M:%S")]"
+}
+
+if [[ -f "$DO_FILE" ]]; then
+  echo "$(log_stamp)[rpc] 📨 Loading override flags from $DO_FILE"
+  while IFS= read -r line; do
+    var=$(echo "$line" | cut -d'=' -f1)
+    [[ " ${ALLOWED_VARS[*]} " == *" $var "* ]] && eval "$line"
+  done < "$DO_FILE"
+fi
+
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --debug)      DEBUG=true;      shift ;;
+    --local)      LOCAL_MODE=true;  shift ;;
+    --check)      CHECK_ONLY=true; shift ;;
+    *) break ;;
+  esac
+done
+
+echo "$(log_stamp)[rpc] Flags — DEBUG=$DEBUG | LOCAL_MODE=$LOCAL_MODE | CHECK_ONLY=$CHECK_ONLY"
+
 
 # ── Paths & Config ─────────────────────────────────────────
 PALADIN_HOME="${1:-$HOME/akash-provider-paladin}"
@@ -22,13 +56,52 @@ CERT="/etc/ssl/etcd/ssl/node-${NODE}.pem"
 KEY="/etc/ssl/etcd/ssl/node-${NODE}-key.pem"
 ETCD_FLAGS="--cacert=$CA --cert=$CERT --key=$KEY"
 
+# __ jq check required later
+if ! command -v jq &> /dev/null; then
+  echo "jq not found, installing..."
+  sudo apt install -y jq
+fi
+
+if $CHECK_ONLY; then
+  if [[ ! -f "$STATE" || "$(cat "$STATE")" != "$TODAY" ]]; then
+    # Check if local RPC is already selected.
+    active_line=$(grep -E '^[[:space:]]*node:' "$CFG" | grep -v '#' | head -1)
+    active_url=$(echo "$active_line" | sed -E 's/.*node:[[:space:]]*"?([^"]+)"?.*/\1/')
+
+    if [[ "$active_url" == *"localhost"* || "$active_url" == *"akash-node-1"* ]]; then
+       echo "$(log_stamp)[rpc] ✅ rotation due, but local RPC already active — skipping rotation"
+     exit 0
+    fi
+
+
+    echo "$(log_stamp)[rpc] ✅ rotation due — local preference will apply"
+    rm -f "$STATE"
+  else
+    echo "$(log_stamp)[rpc] ℹ️ local check already performed today — ending rpc-rotate.sh"
+    exit 0
+  fi
+fi
+
+
+if $LOCAL_MODE; then
+  rm -f "$PALADIN_HOME/.last_rpc_rotate"
+fi
+
 # ── Sync provider.yaml & price_script from etcd ────────────
-fetch_and_prep() {
-  mkdir -p "$PALADIN_HOME"
-  etcdctl $ETCD_FLAGS get /akash-provider-paladin/provider.yaml --print-value-only > "$CFG"
-  etcdctl $ETCD_FLAGS get /akash-provider-paladin/price_script_generic.sh --print-value-only > "$PRICE"
-  chmod +x "$PRICE"
-}
+fetch_and_prep() 
+ {
+     mkdir -p "$PALADIN_HOME"
+  if ! $DEBUG; then
+    etcdctl $ETCD_FLAGS get /akash-provider-paladin/provider.yaml \
+      --print-value-only > "$CFG"
+    etcdctl $ETCD_FLAGS get /akash-provider-paladin/price_script_generic.sh \
+      --print-value-only > "$PRICE"
+    chmod +x "$PRICE"
+  else
+    echo "$(log_stamp)[rpc] --debug: skipped fetch from etcd"
+  fi
+
+ }
 
 # ── Annotate provider.yaml (if needed) ─────────────────────
 annotate_provider_yaml() {
@@ -73,7 +146,7 @@ rotate_rpc() {
     grep -v -E '^[[:space:]]*#([[:space:]]*#)+[[:space:]]*node:'
   )
   (( ${#entries[@]} == 0 )) && {
-    echo "[rpc] No eligible node entries"
+    echo "$(log_stamp)[rpc] No eligible node entries"
     return 1
   }
 
@@ -86,7 +159,7 @@ rotate_rpc() {
   if [[ "${FORCE_LOCAL:-}" == "1" ]]; then
     for i in "${!entries[@]}"; do
       [[ "${entries[i]}" =~ http://localhost:26657|akash-node-1 ]] && {
-        echo "[rpc] First run → preferring local node via rotation logic"
+        echo "$(log_stamp)[rpc] First run → preferring local node via rotation logic"
         force_next_idx=$i
         active_idx=-1
         break
@@ -106,20 +179,20 @@ rotate_rpc() {
     if [[ "$url" =~ localhost || "$url" =~ akash-node-1 ]]; then
       ip=$(kubectl get pod "$LOCAL_POD" -n "$LOCAL_NS" -o jsonpath='{.status.podIP}' 2>/dev/null || echo "")
       if [[ -n "$ip" ]]; then
-        echo "[rpc] Substituting $url → $ip for health check"
+        echo "$(log_stamp)[rpc] Substituting $url → $ip for health check"
         probe_url="http://${ip}:26657"
       else
-        echo "[rpc] Could not resolve pod IP for $LOCAL_POD"
+        echo "$(log_stamp)[rpc] Could not resolve pod IP for $LOCAL_POD"
       fi
     fi
 
     hrs=$(check_rpc "$probe_url") || {
-      echo "[rpc] $probe_url failed health check — skipping"
+      echo "$(log_stamp)[rpc] $probe_url failed health check — skipping"
       (( force_next_idx >= 0 )) && return 1
       continue
     }
 
-    echo "[rpc] Activating $url (${hrs}h)"
+    echo "$(log_stamp)[rpc] Activating $url RPC node Synced for (${hrs}h)"
     if (( force_next_idx >= 0 )); then
       ln_old=$(grep -nE '^[[:space:]]*node:' "$CFG" | cut -d: -f1 | head -1)
       sed -i "${ln_old}s|^[[:space:]]*node:|#node:|" "$CFG"
@@ -129,13 +202,19 @@ rotate_rpc() {
 
     sed -i "${ln_next}s|^[[:space:]]*#[[:space:]]*node:|node:|" "$CFG"
 
-    "$SCRIPTS/update-provider-configuration.sh"
-    etcdctl $ETCD_FLAGS put /akash-provider-paladin/provider.yaml < "$CFG"
-    etcdctl $ETCD_FLAGS put /akash-provider-paladin/price_script_generic.sh < "$PRICE"
+# debug switch 2
+    if ! $DEBUG; then
+      "$SCRIPTS/update-provider-configuration.sh"
+      etcdctl $ETCD_FLAGS put /akash-provider-paladin/provider.yaml < "$CFG"
+      etcdctl $ETCD_FLAGS put /akash-provider-paladin/price_script_generic.sh < "$PRICE"
+    else
+      echo "$(log_stamp)[rpc] --debug: skipped apply to etcd & provider"
+    fi
+
     return 0
   done
 
-  echo "[rpc] ❌ no healthy nodes found"
+  echo "$(log_stamp)[rpc] ❌ no healthy nodes found"
   return 1
 }
 
@@ -144,10 +223,10 @@ fetch_and_prep
 annotate_provider_yaml
 
 if [[ ! -f "$STATE" || "$(cat "$STATE")" != "$TODAY" ]]; then
-  echo "[rpc] First run today → prefer local"
+  echo "$(log_stamp)[rpc] First run today → prefer local"
   FORCE_LOCAL=1 rotate_rpc && echo "$TODAY" > "$STATE" && exit 0
-  echo "[rpc] Rotation attempt failed on first run"
+  echo "$(log_stamp)[rpc] Rotation attempt failed on first run"
 else
-  echo "[rpc] Subsequent run → rotating"
+  echo "$(log_stamp)[rpc] Subsequent run → rotating"
   rotate_rpc
 fi

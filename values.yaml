@@ -6,8 +6,6 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
-# Define which script the container should execute by default
 scriptToRun: "/etc/scripts/ticker.sh"
-
-# Define mount path for scripts injected via ConfigMap
 scriptMountPath: "/etc/scripts"
+

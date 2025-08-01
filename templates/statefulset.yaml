@@ -31,7 +31,14 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/bash", "-c"]
-          args: ["{{ .Values.scriptToRun }}"]
+          args:
+          - |
+            set -euo pipefail
+            echo "Akash Provider Paladin v2.3"
+            #apt won't work not sure how best to solve it
+            # since its not needed, i've left it as is...
+
+            {{ .Values.scriptToRun }}
           resources:
             requests:
               cpu: "50m"

@@ -30,6 +30,7 @@ helm upgrade --install akash-provider akash/provider -n akash-services \
   -f "$PROVIDER_YAML" \
   --set bidpricescript="$(openssl base64 -A < "$PRICE_SCRIPT")"
 
+sleep 5
 echo "Start Provider"
 kubectl -n akash-services scale statefulsets akash-provider --replicas=1
 
