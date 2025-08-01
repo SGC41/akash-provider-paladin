@@ -44,7 +44,7 @@ spec:
           value: "<NODE_NAME>"
       command: ["/bin/bash", "-c"]
       args:
-        - |
+        - |-
           set -euo pipefail
 
           echo "[*] Installing prerequisites via apt…"
