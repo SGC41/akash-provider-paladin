@@ -1,0 +1,107 @@
+#v2.2.9
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: paladin-installer
+  namespace: akash-services
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: paladin-installer-binding
+subjects:
+  - kind: ServiceAccount
+    name: paladin-installer
+    namespace: akash-services
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: install-secondary-cp-<NODE_NAME>
+  namespace: akash-services
+  labels:
+    app: paladin-installer
+spec:
+  serviceAccountName: paladin-installer
+  nodeSelector:
+    kubernetes.io/hostname: <NODE_NAME>
+  tolerations:
+    - operator: Exists
+  restartPolicy: Never
+
+  containers:
+    - name: paladin-installer
+      image: bitnami/kubectl:latest
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        runAsUser: 0
+      env:
+        - name: TARGET_NODE
+          value: "<NODE_NAME>"
+      command: ["/bin/bash", "-c"]
+      args:
+        - |
+          set -euo pipefail
+
+          echo "[*] Installing prerequisites via apt…"
+          apt-get update -qq
+          apt-get install -y --no-install-recommends \
+            git bash curl tar etcd-client \
+          && rm -rf /var/lib/apt/lists/*
+
+          echo "[*] Cloning paladin repo onto host…"
+          [[ -d /root/akash-provider-paladin ]] && rm -rf /root/akash-provider-paladin
+          git clone -b stable https://github.com/SGC41/akash-provider-paladin.git \
+            /root/akash-provider-paladin
+
+          mkdir -p /root/provider
+          echo "Adding cronjob"
+          CRONLINE_CMD='/bin/bash /root/akash-provider-paladin/scripts/rpc-rotate.sh'
+          NEW_CRONLINE_CMD='/bin/bash /root/akash-provider-paladin/scripts/ticker-control-plane.sh'
+          CRONTAB_FILE='/var/spool/cron/crontabs/root'
+          NEW_CRONLINE="*/3 * * * * [ -f /tmp/control-plane.do ] && $NEW_CRONLINE_CMD >> /var/log/paladin.log 2>&1 && rm -f /tmp/control-plane.do"
+
+
+          # Remove any existing entry that references the same script path
+          sed -i "\|$CRONLINE_CMD|d" "$CRONTAB_FILE"
+
+          # Append the new cronline
+          echo "$NEW_CRONLINE" >> "$CRONTAB_FILE"
+
+          # Push control plane install trigger
+          echo "install" > "/host/tmp/control-plane.do"
+          echo "[✓] Install complete for $TARGET_NODE"
+
+      volumeMounts:
+        - name: root-home
+          mountPath: /root
+
+        - name: host-tmp
+          mountPath: /host/tmp
+            readOnly: false
+
+        - name: host-crontab
+          mountPath: /var/spool/cron/crontabs
+
+  volumes:
+    - name: root-home
+      hostPath:
+        path: /root
+        type: Directory
+
+    - name: host-tmp
+      hostPath:
+        path: /tmp
+        type: Director
+
+    - name: host-crontab
+      hostPath:
+        path: /var/spool/cron/crontabs
+        type: Directory
+
+
+

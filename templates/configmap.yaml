@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: akash-provider-paladin-script
+  annotations:
+    buildID: {{ .Values.buildID | quote }}
+  namespace: {{ .Values.namespace | default "akash-services" | quote }}
+  labels:
+    app: {{ include "akash-provider-paladin.name" . | quote }}
+data:
+{{- range $path, $file := .Files.Glob "scripts/*.sh" }}
+  {{ base $path }}: |
+{{ $file | toString | indent 4 }}
+{{- end }}

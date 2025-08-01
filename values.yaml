@@ -1,0 +1,11 @@
+buildID: "20250627"
+namespace: akash-services
+
+image:
+  repository: bitnami/kubectl
+  tag: latest
+  pullPolicy: IfNotPresent
+
+scriptToRun: "/etc/scripts/ticker.sh"
+scriptMountPath: "/etc/scripts"
+
