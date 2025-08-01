@@ -71,7 +71,8 @@ for FILE in "$ETCD_CERT" "$ETCD_KEY" "$ETCD_CACERT"; do
 done
 
 sudo apt install jq -y
-sudo apt install yq -y
+sudo snap install yq
+
 # ───────────────────────────────────────────────────────
 # Upload config to etcd
 # ───────────────────────────────────────────────────────
