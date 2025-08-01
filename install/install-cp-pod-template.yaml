@@ -50,13 +50,13 @@ spec:
           echo "[*] Installing prerequisites via apt…"
           apt-get update -qq
           apt-get install -y --no-install-recommends \
-            git bash curl tar etcd-client \
+          git bash curl tar etcd-client \
           && rm -rf /var/lib/apt/lists/*
 
           echo "[*] Cloning paladin repo onto host…"
           [[ -d /root/akash-provider-paladin ]] && rm -rf /root/akash-provider-paladin
           git clone -b stable https://github.com/SGC41/akash-provider-paladin.git \
-            /root/akash-provider-paladin
+          /root/akash-provider-paladin
 
           mkdir -p /root/provider
           echo "Adding cronjob"
