@@ -27,8 +27,19 @@ done
 # ───────────────────────────────────────────────────────
 for src in "$PROVIDER_SRC" "$PRICE_SCRIPT_SRC"; do
   if [[ ! -s "$src" ]]; then
-    echo "❌ Missing or empty file: $src" >&2
-    exit 1
+        for src2 in "$PROVIDER_ORG" "$PRICE_SCRIPT_ORG"; do
+          if [[ ! -s "$src2" ]]; then
+
+
+          echo "❌ Missing or empty source file: $src" >&2
+            exit 1
+          else
+          echo "Found Source config files, pushing to etcd"
+          PROVIDER_SRC=$PROVIDER_ORG
+          PRICE_SCRIPT_SRC=$PRICE_SCRIPT_ORG
+          fi
+        done
+
   fi
 done
 
