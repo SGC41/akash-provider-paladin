@@ -74,7 +74,7 @@ spec:
 
         - name: host-tmp
           mountPath: /host/tmp
-            readOnly: false
+          readOnly: false
 
         - name: host-crontab
           mountPath: /var/spool/cron/crontabs
