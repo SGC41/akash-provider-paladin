@@ -71,14 +71,13 @@ spec:
           echo "install" > "/host/tmp/control-plane.do"
           echo "[✓] Install complete for $TARGET_NODE"
 
-
       volumeMounts:
         - name: root-home
           mountPath: /root
 
         - name: host-tmp
           mountPath: /host/tmp
-          readOnly: false
+            readOnly: false
 
         - name: host-crontab
           mountPath: /var/spool/cron/crontabs
@@ -86,18 +85,17 @@ spec:
   volumes:
     - name: root-home
       hostPath:
-      path: /root
-      type: Directory
+        path: /root
+        type: Directory
 
     - name: host-tmp
       hostPath:
-      path: /tmp
-      type: Directory
+        path: /tmp
+        type: Directory
 
     - name: host-crontab
       hostPath:
-      path: /var/spool/cron/crontabs
-      type: Directory
-
+        path: /var/spool/cron/crontabs
+        type: Directory
 
 
