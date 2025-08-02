@@ -34,12 +34,10 @@ GET_FLAGS="\
 
 # ── HELPERS ─────────────────────────────────────────────────
 
-fetch_configs() {
   echo "[rpc] Fetching provider.yaml & price script from etcd"
   etcdctl get /akash-provider-paladin/provider.yaml  $GET_FLAGS  > "$PROVIDER_SRC"
   etcdctl get /akash-provider-paladin/price_script_generic.sh  $GET_FLAGS  > "$PRICE_SCRIPT_SRC"
-  chmod +x "$PRICE"
-}
+  chmod +x "$PRICE_SCRIPT_SRC"
 
 echo "✅ Sync complete. Local files updated."
 
