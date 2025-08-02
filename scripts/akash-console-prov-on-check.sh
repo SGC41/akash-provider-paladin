@@ -24,7 +24,7 @@
 PROVIDER_YAML_FILE="$HOME/akash-provider-paladin/provider.yaml"
 
 # Extract wallet address from provider.yaml
-PROVIDER=$(grep -oP '(?<=from: ")[^"]+' "$PROVIDER_YAML_FILE")
+PROVIDER=$(yq '.from' "$PROVIDER_YAML_FILE")
 
 
 
