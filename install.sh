@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.2.9
+# v2.3.0
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 BRANCH="stable"
@@ -46,9 +46,6 @@ else
   git reset --hard "origin/$BRANCH"
 fi
 
-cd "$TARGET_DIR"
-echo "📌 Working directory: $(pwd)"
-
           #prereq shared install - new feature.
           if "$HOME/akash-provider-paladin/install/prereq-install.sh"; then
             echo "Subscript ran successfully"
@@ -56,6 +53,11 @@ echo "📌 Working directory: $(pwd)"
             echo "Error - prereq install failed"
             exit 1
           fi
+
+cd "$TARGET_DIR"
+echo "📌 Working directory: $(pwd)"
+
+
 
 
 # Dynamically select etcd certs based on node shortname
