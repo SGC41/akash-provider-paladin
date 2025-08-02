@@ -1,5 +1,5 @@
 #!/bin/bash
-# v2.2.9
+# v2.3.0
 # Commands added here will be installed on all control planes in the cluster, during paladin reinstall / upgrades
 
 
@@ -9,7 +9,7 @@ sudo apt install yq wget -y
 
 #Helm
 
-wget https://get.helm.sh/helm-v3.11.0-linux-amd64.tar.gz
+wget --no-clobber https://get.helm.sh/helm-v3.11.0-linux-amd64.tar.gz
 
 tar -zxvf helm-v3.11.0-linux-amd64.tar.gz
 
