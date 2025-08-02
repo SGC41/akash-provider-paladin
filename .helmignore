@@ -1,0 +1,11 @@
+.git/
+*.bin
+*.exe
+*.tar.gz
+*.tgz
+*.zip
+*.log
+linux-amd64/
+node_modules/
+test/
+docs/
