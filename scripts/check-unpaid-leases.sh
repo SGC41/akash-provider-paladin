@@ -3,7 +3,7 @@
 # Paladin v2.3.0
 # check-unpaid-leases.sh v1.0.1
 # creator SGC | DCnorse
-# 2025-08-01
+# 2025-08-02
 #
 # Features
 # Checks for unpaid leases, by introducing delta triggered withdrawals of all leases.
@@ -44,6 +44,8 @@
 
 set -euo pipefail
 trap 'echo "[Crash] Exited at line $LINENO"' ERR
+
+snap list yq || sudo snap install yq
 # ── Config & Globals ──────────────────────────────────────────────────────────
 CONFIG="$HOME/akash-provider-paladin/provider.yaml"
 AKASH_CLI="provider-services"
