@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.3.0 - Broken should hopefully get fixed tomorrow
+# Akash Provider Paladin v2.3.0
 Paladin will help keep providers operational.
 - v2.3.0
      Dynamic Withdrawal, based on USD owed delta on individual lease basis.
