@@ -8,7 +8,7 @@
 sudo apt install yq wget -y
 
 #Helm
-
+cd /$HOME
 wget --no-clobber https://get.helm.sh/helm-v3.11.0-linux-amd64.tar.gz
 
 tar -zxvf helm-v3.11.0-linux-amd64.tar.gz
