@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#  v2.2.6
+#  v2.3.0
 
 set -euo pipefail
 
@@ -36,8 +36,8 @@ GET_FLAGS="\
 
 fetch_configs() {
   echo "[rpc] Fetching provider.yaml & price script from etcd"
-  etcdctl get /akash-provider-paladin/provider.yaml  $GET_FLAGS  > "$FILE"
-  etcdctl get /akash-provider-paladin/price_script_generic.sh  $GET_FLAGS  > "$PRICE"
+  etcdctl get /akash-provider-paladin/provider.yaml  $GET_FLAGS  > "$PROVIDER_SRC"
+  etcdctl get /akash-provider-paladin/price_script_generic.sh  $GET_FLAGS  > "$PRICE_SCRIPT_SRC"
   chmod +x "$PRICE"
 }
 
