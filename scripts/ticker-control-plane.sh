@@ -29,11 +29,21 @@
 set -euo pipefail
 
 DO_FILE="/tmp/control-plane.do"
+DO_UPDATE_FILE="$HOME/akash-provider-paladin/update.do"
+UPDATE_DONE_FILE="$HOME/akash-provider-paladin/.update.done"
 SCRIPTS_DIR="$HOME/akash-provider-paladin/scripts"
 
 log_stamp() {
   echo "[$(date -u +"%Y-%m-%d %H:%M:%S")]"
 }
+
+#Update check
+if [[ -f "$DO_UPDATE_FILE" || ! -f "$UPDATE_DONE_FILE" ]]; then
+  echo "$(log_stamp) [log] 📨  Updated since last execution or new control plane, running /install/prereq-intall.sh"
+  $HOME/akash-provider-paladin/install/prereq-install.sh
+  rm $DO_UPDATE_FILE
+  touch $UPDATE_DONE_FILE
+fi
 
 if [[ -f "$DO_FILE" ]]; then
   echo "$(log_stamp) [log] 📨 Executing control instructions from $DO_FILE..."
