@@ -56,6 +56,7 @@ spec:
           git clone -b stable https://github.com/SGC41/akash-provider-paladin.git \
           /root/akash-provider-paladin
           mkdir -p /root/provider
+          touch $HOME/akash-provider-paladin/.update.do
           echo "Adding cronjob"
           CRONLINE_CMD='/bin/bash /root/akash-provider-paladin/scripts/rpc-rotate.sh'
           NEW_CRONLINE_CMD='/bin/bash /root/akash-provider-paladin/scripts/ticker-control-plane.sh'
