@@ -29,7 +29,7 @@
 set -euo pipefail
 
 DO_FILE="/tmp/control-plane.do"
-DO_UPDATE_FILE="$HOME/akash-provider-paladin/update.do"
+DO_UPDATE_FILE="$HOME/akash-provider-paladin/.update.do"
 UPDATE_DONE_FILE="$HOME/akash-provider-paladin/.update.done"
 SCRIPTS_DIR="$HOME/akash-provider-paladin/scripts"
 
