@@ -20,6 +20,8 @@
 #
 #  --debug               Verbose, need i say more...
 #
+#  --manual
+#
 # Operation, will pull information from provider yaml.
 # such as withdrawal period, wallet, rpc nodes, if it can't find the local rpc node.
 #
@@ -51,6 +53,7 @@ CONFIG="$HOME/akash-provider-paladin/provider.yaml"
 AKASH_CLI="provider-services"
 DEBUG=false
 EXECUTE=false
+WITHDRAW=false
 BLOCK_TIME=6
 BLOCKS_PER_HOUR=$((3600 / BLOCK_TIME))
 BLOCKS_PER_DAY=$((86400 / BLOCK_TIME))
@@ -88,9 +91,13 @@ KILL_FILE="$HOME/akash-provider-paladin/kill-list.sh"
 for arg in "$@"; do
   [[ $arg == "--debug"         ]] && DEBUG=true
   [[ $arg == "--execute"       ]] && EXECUTE=true
+  [[ $arg == "--manual"       ]] && MANUAL=true
 done
 
 FALLBACK_RPC=$(yq -r '.paladin_rpc_fallback // "https://rpc-akash.ecostake.com:443"' "$CONFIG")
+
+#on MANUAL flag withdraw all by setting trigger to 0
+MIN_USD_THRESHOLD=0
 
 NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o 'jsonpath={.subsets[0].addresses[0].ip}' 2>/dev/null || echo "")
 if [[ -n "$NODE_IP" ]]; then
