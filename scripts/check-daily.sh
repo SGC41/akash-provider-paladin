@@ -8,3 +8,7 @@ cd $HOME/akash-provider-paladin/scripts
 ./akash-console-prov-on-check.sh
 #check-active....
 ./check-provider-bids.sh
+
+#delete log if more than 1MB
+#quick fix, not a great one...
+find /var/log/paladin.log -type f -size +1M
