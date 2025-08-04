@@ -1,0 +1,48 @@
+Configuration have defaults, which they will use... all other information will be pulled from various files and such.
+
+However there are some customizable features which can be set for ease of use.
+one example of this is the dynamic withdrawal delta trigger USD value.
+it defaults to 10$, but can be set from the provider.yaml located in $HOME/akash-provider-paladin/
+
+example entry below.
+
+paladin_unpaid_withdraw_trigger: 15
+
+Another thing of note, is that paladin will partly take over control of the provider.yaml
+it will use the provider.yaml mentioned earlier, from the control plane node the paladin pod is being hosted on.
+
+so to make it easy to use, i've added 2 scripts for pulling or pushing provider.yaml and price_script_generic.sh
+to and from the ETCD, which is where Paladin will pull the provider configuration files for helm upgrades.
+
+update-local-provider-yaml.sh will pull the ETCD version of the configuration files locally, so they are the same
+as the ones Paladin is currently using or will use on next helm upgrade to the provider.
+
+update-cluster-provider-yaml.sh will push the $HOME/akash-provider-paladin/provider.yaml and price script to the ETCD
+which makes it the one Paladin will use, when rotating RPC nodes and such.
+
+thus to make changes to your provider.yaml
+first pull it local from the ETCD and then after you made your changes, push it back to the ETCD
+
+and then optionally run the 
+update-provider-configuration.sh
+to do the helm upgrade.
+
+its basically just this, with some trimmings and a few more steps, to do the upgrade in the correct way.
+
+helm upgrade --install akash-provider akash/provider -n akash-services \
+  -f "$PROVIDER_YAML" \
+  --set bidpricescript="$(openssl base64 -A < "$PRICE_SCRIPT")"
+
+Regular Helm upgrade of the provider pod.
+which you ofc also can do, but just keep in mind that paladin will use the ETCD version of provider.yaml
+
+so you will find it problematic to make permanent changes to your provider.yaml, if Paladin decides to fight you.
+ofc making the changes correctly and its no issue.
+
+Paladin will add failover Public RPC nodes, in its provider.yaml, your original provider.yaml will remain
+in your provider folder, and will just stop being used... this is done in case something goes wrong, of if 
+one decides to uninstall Paladin, thus there are no permanent changes to your provider.
+
+in the provider.yaml, you can add, remove, change or disable the failover public RPC nodes.
+## will disable them, also noted in the provider.yaml after Paladin copies and modifies it from your provider folder
+# makes them inactive.
