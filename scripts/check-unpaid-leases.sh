@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Paladin v2.3.0
-# check-unpaid-leases.sh v1.0.2
+# check-unpaid-leases.sh v1.0.3
 # creator SGC | DCnorse
 # 2025-08-04
 #
