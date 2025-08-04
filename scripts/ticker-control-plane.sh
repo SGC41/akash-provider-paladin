@@ -26,7 +26,7 @@
 #
 # basic
 
-set -euo pipefail
+set -uo pipefail
 
 DO_FILE="/tmp/control-plane.do"
 DO_UPDATE_FILE="$HOME/akash-provider-paladin/.update.do"
