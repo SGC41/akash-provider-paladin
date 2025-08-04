@@ -20,7 +20,7 @@
 #
 #  --debug               Verbose, need i say more...
 #
-#  --manual
+#  --manual              withdraw all, will add unique leases in the future.
 #
 # Operation, will pull information from provider yaml.
 # such as withdrawal period, wallet, rpc nodes, if it can't find the local rpc node.
@@ -398,7 +398,7 @@ echo "[[[[[[[[[]]]]]]]]]]"
 echo "[[[[Final Report]]]"
 echo "[[[[[[[[[]]]]]]]]]]"
 echo
-echo "$(log_stamp)[Running Script] --debug=$DEBUG --execute=$EXECUTE"
+echo "$(log_stamp)[Running Script] --debug=$DEBUG --execute=$EXECUTE --manual=$MANUAL"
 echo "$(log_stamp)Wallet: $WALLET | Height: $HEIGHT"
 echo "$(log_stamp)USD trigger threshold: \$$MIN_USD_THRESHOLD"
 echo "$(log_stamp)AKT price: \$$AKT_PRICE"
