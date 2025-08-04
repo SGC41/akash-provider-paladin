@@ -36,6 +36,7 @@ Note that there are some required knowledge when using Paladin.
 without it, you will have trouble changing your provider.yaml permanently.
 
 Paladin will at times change the provider.yaml, if it rotates RPC through nodes.
+
 https://github.com/SGC41/akash-provider-paladin/blob/stable/docs/getting_started.txt
 
 Uninstall, not that i can see why anyone would ever want that :D
