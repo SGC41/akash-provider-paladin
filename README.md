@@ -32,6 +32,10 @@ Installation simply run the curl command from a single control plane node.
 curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/stable/install.sh | bash
 ```
 
+Note that there are some required knowledge when using Paladin.
+without it, you will have trouble changing your provider.yaml permanently.
+as Paladin will at times change the provider.yaml, when it rotates RPC nodes.
+https://github.com/SGC41/akash-provider-paladin/blob/stable/docs/getting_started.txt
 
 Uninstall, not that i can see why anyone would ever want that :D
 but incase it runs amok.... and so people don't have to dig around after it.
@@ -95,3 +99,5 @@ each control plane will log its RPC-rotate.sh runs in /var/log/rpc-rotate.log
 if you are running v1, you should manually remove it or use the uninstall script for v1.
 on V2.0 or later just rerun the install and it will upgrade to the latest version.
 Enjoy.  and let me know if there are any issues.
+
+
