@@ -32,6 +32,7 @@ DO_FILE="/tmp/control-plane.do"
 DO_UPDATE_FILE="$HOME/akash-provider-paladin/.update.do"
 UPDATE_DONE_FILE="$HOME/akash-provider-paladin/.update.done"
 SCRIPTS_DIR="$HOME/akash-provider-paladin/scripts"
+CONFIG="$HOME/akash-provider-paladin/provider.yaml
 
 log_stamp() {
   echo "[$(date -u +"%Y-%m-%d %H:%M:%S")]"
@@ -43,6 +44,10 @@ if [[ -f "$DO_UPDATE_FILE" || ! -f "$UPDATE_DONE_FILE" ]]; then
   $HOME/akash-provider-paladin/install/prereq-install.sh
   rm $DO_UPDATE_FILE
   touch $UPDATE_DONE_FILE
+fi
+
+if [[ ! -f "$CONFIG" ]]; then
+$HOME/akash-provider-paladin/update-local-provider-yaml.sh
 fi
 
 if [[ -f "$DO_FILE" ]]; then
