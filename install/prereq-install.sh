@@ -13,6 +13,7 @@ version=$(provider-services version 2>/dev/null)
 
 if [ "$(printf '%s\n' "$version" 'v0.6.9' | sort -V | head -n1)" != 'v0.6.9' ]; then
   echo "⚠️ Detected outdated version: $version — updating provider-service binary..."
+  cd $HOME
   wget https://github.com/akash-network/provider/releases/download/v0.6.9/provider-services_0.6.9_linux_amd64.deb
 
   dpkg -i provider-services*.deb
