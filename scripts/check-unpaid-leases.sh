@@ -97,7 +97,7 @@ done
 FALLBACK_RPC=$(yq -r '.paladin_rpc_fallback // "https://rpc-akash.ecostake.com:443"' "$CONFIG")
 
 #on MANUAL flag withdraw all by setting trigger to 0
-MIN_USD_THRESHOLD=0
+$MANUAL && MIN_USD_THRESHOLD=0
 
 NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o 'jsonpath={.subsets[0].addresses[0].ip}' 2>/dev/null || echo "")
 if [[ -n "$NODE_IP" ]]; then
