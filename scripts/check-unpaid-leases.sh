@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
 # Paladin v2.3.0
-# check-unpaid-leases.sh v1.0.1
+# check-unpaid-leases.sh v1.0.2
 # creator SGC | DCnorse
-# 2025-08-02
+# 2025-08-04
 #
 # Features
 # Checks for unpaid leases, by introducing delta triggered withdrawals of all leases.
@@ -20,7 +20,7 @@
 #
 #  --debug               Verbose, need i say more...
 #
-#  --manual              withdraw all, will add unique leases in the future.
+#  --withdraw             will add unique leases in the future.
 #
 # Operation, will pull information from provider yaml.
 # such as withdrawal period, wallet, rpc nodes, if it can't find the local rpc node.
@@ -53,7 +53,7 @@ CONFIG="$HOME/akash-provider-paladin/provider.yaml"
 AKASH_CLI="provider-services"
 DEBUG=false
 EXECUTE=false
-WITHDRAW=false
+MANUAL=false
 BLOCK_TIME=6
 BLOCKS_PER_HOUR=$((3600 / BLOCK_TIME))
 BLOCKS_PER_DAY=$((86400 / BLOCK_TIME))
@@ -91,7 +91,7 @@ KILL_FILE="$HOME/akash-provider-paladin/kill-list.sh"
 for arg in "$@"; do
   [[ $arg == "--debug"         ]] && DEBUG=true
   [[ $arg == "--execute"       ]] && EXECUTE=true
-  [[ $arg == "--manual"       ]] && MANUAL=true
+  [[ $arg == "--withdraw"       ]] && MANUAL=true
 done
 
 FALLBACK_RPC=$(yq -r '.paladin_rpc_fallback // "https://rpc-akash.ecostake.com:443"' "$CONFIG")
