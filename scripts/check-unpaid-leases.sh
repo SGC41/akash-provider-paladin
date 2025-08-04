@@ -64,6 +64,10 @@ file="$HOME/akash-provider-paladin/.withdrawn.tmp"
 # Ensure it always exists afterward
 touch "$file"
 
+
+#checking for provider.yaml, if not then download it from ETCD
+[ ! -f "$CONFIG" ] && echo "provider.yaml missing downloading from ETCD" && $HOME/akash-provider-paladin/update-local-provider-yaml.sh
+
 # read withdrawal period (e.g. "12h") and convert to blocks
 WITHDRAWAL_PERIOD_RAW=$(yq -r '.withdrawalperiod // "144h"' "$CONFIG")
 if [[ $WITHDRAWAL_PERIOD_RAW =~ ^([0-9]+)h$ ]]; then
