@@ -2,13 +2,10 @@
 # v2.3.0
 # Commands added here will be installed on all control planes in the cluster, during paladin reinstall / upgrades
 
-
-# needs yq install
-
-sudo apt install wget -y
+sudo apt install wget jq -y
 sudo snap install yq
 
-#provider services check
+#provider services check, needs improvements, but functional.
 version=$(provider-services version 2>/dev/null)
 
 if [ "$(printf '%s\n' "$version" 'v0.6.9' | sort -V | head -n1)" != 'v0.6.9' ]; then
