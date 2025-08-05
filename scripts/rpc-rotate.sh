@@ -74,7 +74,7 @@ if $CHECK_ONLY; then
     fi
 
 
-    echo "$(log_stamp)[rpc] ✅ rotation due — local preference will apply"
+    echo "$(log_stamp)[rpc] ✅ rotation due — Current RPC Node = "$active_url", so local RPC preference will be applied"
     rm -f "$STATE"
   else
     echo "$(log_stamp)[rpc] ℹ️ local check already performed today — ending rpc-rotate.sh"
