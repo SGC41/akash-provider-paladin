@@ -1,12 +1,13 @@
 #!/bin/bash
 #
-# ticker.sh v2.2.9
+# ticker.sh v2.2.10
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
 
 # Monitors provider restarts and triggers RPC rotation.
 # Additionally runs stuck pod cleanup exactly on 00 and 30 minute marks.
+# now 00, 20 and 40
 # 
 
 
@@ -17,7 +18,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 while true; do
   echo "============================"
   echo "Script cycle started at: $(date)"
-  echo "v2.2.9" 
+  echo "v2.2.10" 
   echo "============================"
 
 
@@ -48,8 +49,8 @@ minute=$(date +%M)
     echo "can take up to 5 minutes"
   fi
 
-  # ── Run stuck pod cleanup at :00 and :30 ──
-  if [[ "$minute" == "00" || "$minute" == "30" ]]; then
+  # ── Run stuck pod cleanup at :00 and :30 ── changed to 20min
+  if [[ "$minute" == "00" || "$minute" == "20" || "$minute" == "40" ]]; then
     echo "Stuck Pod Cleanup Triggered at minute $minute"
     "$SCRIPT_DIR/clear_stuck_pods.sh"
 
