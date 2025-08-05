@@ -1,5 +1,5 @@
 #!/bin/bash
-# v2.3.0
+# v2.3.1
 # Commands added here will be installed on all control planes in the cluster, during paladin reinstall / upgrades
 
 sudo apt install wget jq -y
@@ -8,20 +8,27 @@ sudo snap install yq
 #provider services check, needs improvements, but functional.
 version=$(provider-services version 2>/dev/null)
 
-if [ "$(printf '%s\n' "$version" 'v0.6.9' | sort -V | head -n1)" != 'v0.6.9' ]; then
-  echo "⚠️ Detected outdated version: $version — updating provider-service binary..."
-  cd $HOME
-  wget --no-clobber https://github.com/akash-network/provider/releases/download/v0.7.0-rc8/provider-services_0.7.0-rc8_linux_amd64.deb
+current="${version#v}"
+baseline="0.7.0-rc8"
+
+min=$(printf '%s\n' "$current" "$baseline" \
+      | sort -V \
+      | head -n1)
+
+if [ "$min" != "$baseline" ]; then
+  echo "⚠️ Detected outdated version: $version — updating to v$baseline…"
+  cd "$HOME"
+  wget --no-clobber \
+    "https://github.com/akash-network/provider/releases/download/v${baseline}/provider-services_${baseline}_linux_amd64.deb"
 
   dpkg -i provider-services*.deb
-
   rm /usr/local/bin/provider-services
   provider-services version
   hash -r
+
+else
+  echo "Your version ($version) is ≥ v$baseline — no update needed."
 fi
-
-
-
 
 
 #Helm
