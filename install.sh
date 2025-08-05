@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.3.0
+# v2.3.1
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 BRANCH="stable"
@@ -72,8 +72,7 @@ for FILE in "$ETCD_CERT" "$ETCD_KEY" "$ETCD_CACERT"; do
   [[ -f "$FILE" ]] || { echo "❌ Missing required etcd cert/key: $FILE"; exit 1; }
 done
 
-sudo apt install jq -y
-sudo snap install yq
+
 
 # ───────────────────────────────────────────────────────
 # Upload config to etcd
@@ -100,7 +99,7 @@ etcdctl put /akash-provider-paladin/price_script_generic.sh \
 
 echo "[*] Ensuring RPC rotation cronjob on local control plane..."
 
-CRONLINE="*/3 * * * * [ -f /tmp/control-plane.do ] && /bin/bash \"$TARGET_DIR/scripts/ticker-control-plane.sh\" >> /var/log/paladin.log 2>&1 && rm -f /tmp/control-plane.do"
+CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash \"$TARGET_DIR/scripts/ticker-control-plane.sh\" >> /var/log/paladin.log 2>&1 && rm -f /tmp/control-plane.do"
 SCRIPT_PATH="$TARGET_DIR/scripts/rpc-rotate.sh"
 
 # Remove any existing cron jobs that reference the script (regardless of timing)
