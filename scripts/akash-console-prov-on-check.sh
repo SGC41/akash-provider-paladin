@@ -59,7 +59,7 @@ API_ENDPOINT="https://console-api.akash.network/v1/providers/${PROVIDER}"
   curl -X GET \
     "$API_ENDPOINT" \
     -H 'accept: application/json' \
-    > "$TMP_FILE"
+    > "$TMP_FILE" && echo "Successfully fetched provider data from Akash Console API.
 
   # Extract provider info using jq from Akash Console API data
   PROVIDER_INFO=$(cat "$TMP_FILE")
