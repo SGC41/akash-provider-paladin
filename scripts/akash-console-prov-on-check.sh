@@ -1,7 +1,8 @@
 #!/bin/bash
-# v2.2.8
+# v2.2.9
 # Simple Description of funtions
 #
+# changed from 1hr to 16 minutes, and will change checks from 30 to 20.
 # Pulls Online State and Last seen from Console API if the provider is online the check is passed
 # If the provider is offline, the script proceeds to attempt to diagnose, if its recorded as being down due to the Akash Console issue.
 #
@@ -152,8 +153,8 @@ if [[ "$IS_ONLINE" == "false" ]]; then
   LAST_UNIX=$(date -d "$LAST_ONLINE_DATE" +"%s")
   NOW_UNIX=$(date +"%s")
   OFFLINE_DURATION=$((NOW_UNIX - LAST_UNIX))
-  if [[ $OFFLINE_DURATION -gt 3600 ]]; then
-    echo "$(log_stamp) [log] [Info][🚨] Provider has been offline > 1 hour"
+  if [[ $OFFLINE_DURATION -gt 960 ]]; then
+    echo "$(log_stamp) [log] [Info][🚨] Provider has been offline > 16 minutes"
 
     # ── Spin down provider pod ────────────────────────────────
     kubectl -n akash-services scale statefulsets akash-provider --replicas=0
@@ -176,7 +177,7 @@ if [[ "$IS_ONLINE" == "false" ]]; then
     #  echo "$(log_stamp) [log] [Info][ℹ] Note already set: $ISSUE_KEY"
     #fi
   else
-    echo "$(log_stamp) [log] [Info][⏱] Offline duration is under 1 hour — holding"
+    echo "$(log_stamp) [log] [Info][⏱] Offline duration is under 15 minutes — holding"
   fi
 else
   echo "$(log_stamp) [log] [Info][✓] Provider is online — no action needed"
