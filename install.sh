@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.3.1
+# v2.3.2
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 BRANCH="stable"
@@ -74,24 +74,39 @@ done
 
 
 
-# ───────────────────────────────────────────────────────
-# Upload config to etcd
-# ───────────────────────────────────────────────────────
-
-echo "💾 Pushing provider.yaml and price_script_generic.sh to etcd..."
-
 [[ -f "$PROVIDER_SRC" ]] || { echo "❌ Missing file: $PROVIDER_SRC"; exit 1; }
 [[ -f "$PRICE_SCRIPT_SRC" ]] || { echo "❌ Missing file: $PRICE_SCRIPT_SRC"; exit 1; }
 
-etcdctl put /akash-provider-paladin/provider.yaml \
-  --cacert="$ETCD_CACERT" \
-  --cert="$ETCD_CERT" \
-  --key="$ETCD_KEY" < "$PROVIDER_SRC"
 
-etcdctl put /akash-provider-paladin/price_script_generic.sh \
+# ───────────────────────────────────────────────────────
+# Check for existing config in etcd and act accordingly
+# ───────────────────────────────────────────────────────
+
+KEY="/akash-provider-paladin/provider.yaml"
+
+# Try to fetch the key’s value (silencing stderr)
+value=$(etcdctl get "$KEY" \
   --cacert="$ETCD_CACERT" \
   --cert="$ETCD_CERT" \
-  --key="$ETCD_KEY" < "$PRICE_SCRIPT_SRC"
+  --key="$ETCD_KEY" 2>/dev/null)
+
+if [[ -n "$value" ]]; then
+  echo "✅ Key exists in etcd at $KEY, pulling it to akash-provider-paladin folder"
+  update-local-provider-yaml.sh
+else
+  echo "⚠️ Key not found in etcd at $KEY—pushing it now..."
+  
+  etcdctl put /akash-provider-paladin/provider.yaml \
+    --cacert="$ETCD_CACERT" \
+    --cert="$ETCD_CERT" \
+    --key="$ETCD_KEY" < "$PROVIDER_SRC"
+
+  etcdctl put /akash-provider-paladin/price_script_generic.sh \
+    --cacert="$ETCD_CACERT" \
+    --cert="$ETCD_CERT" \
+    --key="$ETCD_KEY" < "$PRICE_SCRIPT_SRC"
+
+fi
 
 # ______________________________
 # Cronjob injection and clean
