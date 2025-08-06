@@ -96,7 +96,8 @@ if [[ -n "$value" ]]; then
   echo "📂 Now in: $(pwd)"
   ls -1
 
-  bash update-local-provider-yaml.sh
+  $HOME/akash-provider-paladin/update-local-provider-yaml.sh
+
 else
   echo "⚠️ Key not found in etcd at $KEY—pushing it now..."
   
