@@ -92,6 +92,7 @@ value=$(etcdctl get "$KEY" \
 
 if [[ -n "$value" ]]; then
   echo "✅ Key exists in etcd at $KEY, pulling it to akash-provider-paladin folder"
+  cd $HOME/akash-provider-paladin
   update-local-provider-yaml.sh
 else
   echo "⚠️ Key not found in etcd at $KEY—pushing it now..."
