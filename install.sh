@@ -31,7 +31,7 @@ PRICE_SCRIPT_SRC="$HOME/provider/price_script_generic.sh"
 # ───────────────────────────────────────────────────────
 
 if [[ "$PWD" == "$TARGET_DIR"* ]]; then
-  echo "⚠️ Running from inside $TARGET_DIR — restarting clean"
+  echo "⚠️ Running from inside $TARGET_DIR — restarting clean changing to $HOME"
   cd "$HOME"
   rm -rf "$TARGET_DIR"
 fi
