@@ -2,6 +2,7 @@
 
 cd $HOME/akash-provider-paladin
 $HOME/akash-provider-paladin/update-local-provider-yaml.sh && \
+echo "Opening Provider.yaml for editing" && \
 nano $HOME/akash-provider-paladin/provider.yaml && \
 $HOME/akash-provider-paladin/update-cluster-provider-yaml.sh && \
 
