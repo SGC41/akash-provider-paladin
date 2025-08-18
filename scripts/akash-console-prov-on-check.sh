@@ -1,5 +1,5 @@
 #!/bin/bash
-# v2.2.9
+# v2.3.0
 # Simple Description of funtions
 #
 # changed from 1hr to 16 minutes, and will change checks from 30 to 20.
@@ -113,38 +113,38 @@ if [[ "$IS_ONLINE" == "false" ]]; then
     echo "$(log_stamp) [log] [Info][!] Provider API not responding"
        # inset script block performs check that provider api is running and if not initiates temporary provider pod scale down
        # this seems to make the provider be registered as online with Akash Console, when spun back up after an unknown amount of time.
-	echo "$(log_stamp) [log] [Info]Provider Pod Check with Age Info"
-	# Target StatefulSet
-	TARGET="akash-provider"
-	NAMESPACE="akash-services"
+        echo "$(log_stamp) [log] [Info]Provider Pod Check with Age Info"
+        # Target StatefulSet
+        TARGET="akash-provider"
+        NAMESPACE="akash-services"
 
-	# Fetch READY status and AGE from kubectl
-	readiness=$(kubectl -n "$NAMESPACE" get statefulsets "$TARGET" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "")
-	replicas=$(kubectl -n "$NAMESPACE" get statefulsets "$TARGET" -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "")
-	created_at=$(kubectl -n "$NAMESPACE" get statefulsets "$TARGET" -o jsonpath='{.metadata.creationTimestamp}' 2>/dev/null || echo "")
+        # Fetch READY status and AGE from kubectl
+        readiness=$(kubectl -n "$NAMESPACE" get statefulsets "$TARGET" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "")
+        replicas=$(kubectl -n "$NAMESPACE" get statefulsets "$TARGET" -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "")
+        created_at=$(kubectl -n "$NAMESPACE" get statefulsets "$TARGET" -o jsonpath='{.metadata.creationTimestamp}' 2>/dev/null || echo "")
 
-	# Check if pod is spun up
-	if [[ "$readiness" == "$replicas" && "$replicas" != "" ]]; then
-	  echo "$(log_stamp) [log] [Info][✓] Provider pod '$TARGET' is running → READY: $readiness/$replicas"
+        # Check if pod is spun up
+        if [[ "$readiness" == "$replicas" && "$replicas" != "" ]]; then
+          echo "$(log_stamp) [log] [Info][✓] Provider pod '$TARGET' is running → READY: $readiness/$replicas"
 
-	# Calculate uptime
-	  created_unix=$(date -d "$created_at" +"%s")
-	  now_unix=$(date +"%s")
-	  seconds_up=$((now_unix - created_unix))
+        # Calculate uptime
+          created_unix=$(date -d "$created_at" +"%s")
+          now_unix=$(date +"%s")
+          seconds_up=$((now_unix - created_unix))
 
-  	# Convert to days / hours
-	  uptime_days=$((seconds_up / 86400))
-	  uptime_hours=$(((seconds_up % 86400) / 3600))
+        # Convert to days / hours
+          uptime_days=$((seconds_up / 86400))
+          uptime_hours=$(((seconds_up % 86400) / 3600))
 
-	  echo "$(log_stamp) [log] [Info][🕒] Uptime: ${uptime_days}d ${uptime_hours}h"
-	  echo "$(log_stamp) [log] [Info]STATUS=true"
-	else
-	  echo "$(log_stamp) [log] [Info][✗] Provider pod '$TARGET' is NOT running → READY: $readiness/$replicas"
-	  echo "$(log_stamp) [log] [Info]STATUS=false"
-	  echo "$(log_stamp) [log] [Info]StartProviderPOD" >> /tmp/ticker.do
-	fi
+          echo "$(log_stamp) [log] [Info][🕒] Uptime: ${uptime_days}d ${uptime_hours}h"
+          echo "$(log_stamp) [log] [Info]STATUS=true"
+        else
+          echo "$(log_stamp) [log] [Info][✗] Provider pod '$TARGET' is NOT running → READY: $readiness/$replicas"
+          echo "$(log_stamp) [log] [Info]STATUS=false"
+          echo "$(log_stamp) [log] [Info]StartProviderPOD" >> /tmp/ticker.do
+        fi
 
-	#end of injected script block
+        #end of injected script block
 
     exit 1
   fi
@@ -182,5 +182,4 @@ if [[ "$IS_ONLINE" == "false" ]]; then
 else
   echo "$(log_stamp) [log] [Info][✓] Provider is online — no action needed"
 fi
-
 
