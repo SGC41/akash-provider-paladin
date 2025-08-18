@@ -1,7 +1,8 @@
-# Akash Provider Paladin v2.3.1
+# Akash Provider Paladin v2.3.2
 might have some bugs, but think it should be pretty functional now.
 
 Paladin will help keep providers operational.
+- v2.3.2 - more bug fixes
 - v2.3.0
      Dynamic Withdrawal, based on USD owed delta on individual lease basis.
 
