@@ -11,4 +11,4 @@ cd $HOME/akash-provider-paladin/scripts
 
 #delete log if more than 1MB
 #quick fix, not a great one...
-find /var/log/paladin.log -type f -size +1M
+[ $(stat -c%s /var/log/paladin.log) -gt 1048576 ] && rm /var/log/paladin.log
