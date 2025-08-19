@@ -9,6 +9,9 @@ cd $HOME/akash-provider-paladin/scripts
 #check-active....
 ./check-provider-bids.sh
 
+#wallet-check will move excess delta funds of AKT or USDC, to preset cold-wallet, when configured.
+./check-wallet.sh
+
 #delete log if more than 1MB
 #quick fix, not a great one...
-find /var/log/paladin.log -type f -size +1M
+[ $(stat -c%s /var/log/paladin.log) -gt 1048576 ] && rm /var/log/paladin.log

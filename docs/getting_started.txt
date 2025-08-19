@@ -1,3 +1,5 @@
+v2.4.0
+
 Configuration have defaults, which they will use... all other information will be pulled from various files and such.
 
 However there are some customizable features which can be set for ease of use.
@@ -46,3 +48,23 @@ one decides to uninstall Paladin, thus there are no permanent changes to your pr
 in the provider.yaml, you can add, remove, change or disable the failover public RPC nodes.
 ## will disable them, also noted in the provider.yaml after Paladin copies and modifies it from your provider folder
 # makes them inactive.
+
+
+# New settings for 2.4.0 - disabled by default
+# will be active when cold wallet configuration line + akash wallet is added to provider.yaml
+
+Cold Wallet features, should be pretty self explainatory... add to provider.yaml
+drop the ##Defaults to 20 AKT or so.... it tends to cause issues, when comments are in the same lines as configurations
+# Provider.yaml entries for ease of customization.
+# paladin_provider_wallet_max_allowed_akt: 20                                           ## Defaults to 20 AKT
+# paladin_provider_wallet_max_allowed_akt_delta: 50                                     ## Defaults to 50 AKT
+
+this would be the correct approach, maybe with the comment on top... but meh, making an example :D deal with it.
+
+paladin_provider_wallet_max_allowed_usdc: 20                                          
+# Defaults to 20 USDC
+paladin_provider_wallet_max_allowed_usdc_delta: 50                                    
+# Defaults to 50 USDC
+
+# paladin_cold_wallet: <your cold akash wallet, should beging with akash....>           ## disabling script while not set in paladin provider.yaml
+

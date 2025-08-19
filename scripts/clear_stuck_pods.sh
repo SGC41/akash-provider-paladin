@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# clear_stuck_pods.sh v2.2.4
+# clear_stuck_pods.sh v2.3.0
 # ---------------------------------------
 # Scans all namespaces for pods stuck in
 # Terminating, Error, or Unknown states.
@@ -15,7 +15,7 @@ echo "Started at: $(date)"
 # ── Identify stuck pods globally ──
 STUCK_PODS=$(
   kubectl get pods --all-namespaces |
-  grep -E 'Terminating|Error|Terminated|ContainerStatusUnknown|Unknown' |
+  grep -E 'Terminating|Error|Terminated|ContainerStatusUnknown|Unknown|NodeAffinity' |
   awk '{print $1 " " $2}'
 )
 

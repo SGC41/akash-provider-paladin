@@ -3,10 +3,10 @@ set -euo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.3.2
+# v2.3.3
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
-BRANCH="stable"
+BRANCH="unstable"
 TARGET_DIR="$HOME/akash-provider-paladin"
 MANIFEST_TEMPLATE="$TARGET_DIR/install/install-cp-pod-template.yaml"
 TMP_MANIFEST="/tmp/secondary-cp-install.yaml"
@@ -31,16 +31,15 @@ PRICE_SCRIPT_SRC="$HOME/provider/price_script_generic.sh"
 # ───────────────────────────────────────────────────────
 
 if [[ "$PWD" == "$TARGET_DIR"* ]]; then
-  echo "⚠️ Running from inside $TARGET_DIR — restarting clean changing to $HOME"
+  echo "⚠️ Running from inside $TARGET_DIR — changing to $HOME"
   cd "$HOME"
-  rm -rf "$TARGET_DIR"
 fi
 
 if [[ ! -d "$TARGET_DIR/.git" ]]; then
   echo "📂 Cloning repository..."
   git clone -b "$BRANCH" "$REPO" "$TARGET_DIR"
 else
-  echo "🔄 Updating existing repo..."
+  echo "🔄 Updating existing repo... custom files and folders will remain"
   cd "$TARGET_DIR"
   git fetch origin "$BRANCH"
   git reset --hard "origin/$BRANCH"
