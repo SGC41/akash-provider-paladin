@@ -38,7 +38,7 @@ Lists all terminating and error state pods across all namespaces and deletes the
 Now runs its own pod called akash-provider-paladin, which cannot get stuck and handles the stuck pod checks and deletions.
 100% cluster support.
 
-will be adding more features over time.
+
 
 Installation simply run the curl command from a single control plane node.
 ```shell
