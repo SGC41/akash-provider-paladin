@@ -6,7 +6,7 @@ echo "Opening Provider.yaml for editing" && \
 nano $HOME/akash-provider-paladin/provider.yaml && \
 $HOME/akash-provider-paladin/update-cluster-provider-yaml.sh && \
 
-read -p "Do you want to continue? [Y/n] ?" choice
+read -p "Do you want to run the Helm upgrade sequence pushing your new provider.yaml to the provider? [Y/n] ?" choice
 choice=${choice:-Y}  # Default to Y if empty
 
 case "$choice" in
