@@ -1,7 +1,16 @@
-# Akash Provider Paladin v2.3.3
+# Akash Provider Paladin v2.4.0
 might have some bugs, but think it should be pretty functional now.
 
 Paladin will help keep providers operational.
+- v2.4.0
+     Cold wallet feature added.
+     Now the warm provider wallet can overflow into a cold wallet, for extra security of earned funds.
+     Check getting_started.txt or the new script file for add cold wallet, minimum's and delta's to the provider.yaml
+
+- v2.3.3 - added edit-yaml.sh
+     easier / faster way to perform edits on provider.yaml in the correct akash paladin sequence.
+     tho its recommended to be familiar with the process, if one needs to use it one day.
+
 - v2.3.2 - more bug fixes
 - v2.3.0
      Dynamic Withdrawal, based on USD owed delta on individual lease basis.
