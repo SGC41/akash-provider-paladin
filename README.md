@@ -1,9 +1,11 @@
-# Akash Provider Paladin v2.4.0
+# Akash Provider Paladin v2.4.1
 Paladin will help keep providers operational and safe.
 
 Please report bugs, should be pretty functional now.
+Minor releases will usually be bug fixes, have an issue run the install command again.
 
 Paladin will help keep providers operational.
+
 - v2.4.0
      Cold wallet feature added.
      Now the warm provider wallet can overflow into a cold wallet, for extra security of earned funds.

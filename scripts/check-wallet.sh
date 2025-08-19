@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# check_wallet.sh v1.21
+# check_wallet.sh v1.30
 # ------------------------------------------
 # Checks AKT and USDC balances in a given wallet using the akash CLI.
 # If balance exceeds (minimum + delta) for a token, moves the excess
@@ -23,9 +23,9 @@
 
 set -euo pipefail
 
-CONFIG_PATH="$HOME/akash-provider-paladin/provider.yaml"
-PROVIDER_WALLET=$(yq -r '.from' "$CONFIG_PATH")
-COLD_WALLET=$(yq -r '.paladin_cold_wallet' "$CONFIG_PATH")
+CONFIG="$HOME/akash-provider-paladin/provider.yaml"
+PROVIDER_WALLET=$(yq -r '.from' "$CONFIG")
+COLD_WALLET=$(yq -r '.paladin_cold_wallet' "$CONFIG")
 
 
 # Minimum and delta AKT grabbed from provider.yaml
