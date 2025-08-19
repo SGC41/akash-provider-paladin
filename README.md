@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.4.1
+# Akash Provider Paladin v2.4.2
 Paladin will help keep providers operational and safe.
 
 Please report bugs, should be pretty functional now.
