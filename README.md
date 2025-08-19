@@ -60,7 +60,7 @@ but incase it runs amok.... and so people don't have to dig around after it.
 
 This might be the only way for one to easily shut it down, as its made to be resilient.
 ```
-helm uninstall akash-provider-paladin
+helm uninstall akash-provider-paladin -n akash-services
 ```
 
 
