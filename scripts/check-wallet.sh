@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# check_wallet.sh v1.31
+# check_wallet.sh v1.32
 # ------------------------------------------
 # Checks AKT and USDC balances in a given wallet using the akash CLI.
 # If balance exceeds (minimum + delta) for a token, moves the excess
@@ -34,7 +34,7 @@ DELTA_AKT=$(yq -r '.paladin_provider_wallet_max_allowed_akt_delta // 50' "$CONFI
 
 # Minimum and delta AKT grabbed from provider.yaml
 MIN_USDC=$(yq -r '.paladin_provider_wallet_max_allowed_usdc // 20' "$CONFIG")
-DELTA_AKT=$(yq -r '.paladin_provider_wallet_max_allowed_usdc_delta // 50' "$CONFIG")
+DELTA_USDC=$(yq -r '.paladin_provider_wallet_max_allowed_usdc_delta // 50' "$CONFIG")
 
 # Denomination symbols (as used in Akash CLI)
 DENOM_AKT="uakt"        # micro-AKT
