@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# check_wallet.sh v1.30
+# check_wallet.sh v1.31
 # ------------------------------------------
 # Checks AKT and USDC balances in a given wallet using the akash CLI.
 # If balance exceeds (minimum + delta) for a token, moves the excess

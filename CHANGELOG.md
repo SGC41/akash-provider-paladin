@@ -1,6 +1,7 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## 2.4.1 - critical bug fix to cold wallet feature.
 
 ## [2.2.0] – 2025-06-27
 
