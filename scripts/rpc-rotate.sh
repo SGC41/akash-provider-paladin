@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # rpc-rotate.sh v2.3.3
-set -euo pipefail
+set -uo pipefail
 export ETCDCTL_API=3
 
 
