@@ -1,8 +1,33 @@
-# Akash Provider Paladin v2.5.0
+# Akash Provider Paladin v2.5.1
 Paladin will help keep providers operational and safe.
 
 Please report bugs, should be pretty functional now.
 Minor releases will usually be bug fixes, have an issue run the install command again.
+
+
+Installation simply run the curl command from a single control plane node.
+```shell
+curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/stable/install.sh | bash
+```
+
+Note that there are some required knowledge when using Paladin.
+without it, you will have trouble changing your provider.yaml permanently.
+
+Paladin will at times change the provider.yaml, if it rotates RPC through nodes.
+
+https://github.com/SGC41/akash-provider-paladin/blob/stable/docs/getting_started.txt
+
+add --branch=unstable to install a different branch.
+ie. install.sh --branch=unstable | bash
+
+Uninstall, not that i can see why anyone would ever want that :D
+but incase it runs amok.... and so people don't have to dig around after it.
+
+This might be the only way for one to easily shut it down, as its made to be resilient.
+```
+helm uninstall akash-provider-paladin -n akash-services
+```
+
 
 Paladin will help keep providers operational.
 - v2.5.0
@@ -47,30 +72,6 @@ Lists all terminating and error state pods across all namespaces and deletes the
 
 Now runs its own pod called akash-provider-paladin, which cannot get stuck and handles the stuck pod checks and deletions.
 100% cluster support.
-
-
-
-Installation simply run the curl command from a single control plane node.
-```shell
-curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/stable/install.sh | bash
-```
-
-Note that there are some required knowledge when using Paladin.
-without it, you will have trouble changing your provider.yaml permanently.
-
-Paladin will at times change the provider.yaml, if it rotates RPC through nodes.
-
-https://github.com/SGC41/akash-provider-paladin/blob/stable/docs/getting_started.txt
-
-
-Uninstall, not that i can see why anyone would ever want that :D
-but incase it runs amok.... and so people don't have to dig around after it.
-
-This might be the only way for one to easily shut it down, as its made to be resilient.
-```
-helm uninstall akash-provider-paladin
-```
-
 
 
 Paladin Pod Shutdown Command
