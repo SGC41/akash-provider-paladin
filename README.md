@@ -1,10 +1,18 @@
-# Akash Provider Paladin v2.4.2
+# Akash Provider Paladin v2.5.0
 Paladin will help keep providers operational and safe.
 
 Please report bugs, should be pretty functional now.
 Minor releases will usually be bug fixes, have an issue run the install command again.
 
 Paladin will help keep providers operational.
+- v2.5.0
+     Paladin pod will now favor running on, the control plane the install command was run on.
+     This simplifies logging and other cluster related annoyances.
+     The pod will still move freely between the control planes, if issues should arise.
+
+     But this way logs will usually be in the same place...
+
+     Also improved branch selection, so i won't push the wrong branch install script again.
 
 - v2.4.0
      Cold wallet feature added.
