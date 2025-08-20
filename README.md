@@ -7,7 +7,7 @@ Minor releases will usually be bug fixes, have an issue run the install command 
 
 Installation simply run the curl command from a single control plane node.
 ```shell
-curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/stable/install.sh | bash -s -- --branch=unstable
+curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/stable/install.sh | bash
 ```
 
 Note that there are some required knowledge when using Paladin.
@@ -17,8 +17,8 @@ Paladin will at times change the provider.yaml, if it rotates RPC through nodes.
 
 https://github.com/SGC41/akash-provider-paladin/blob/stable/docs/getting_started.txt
 
-add --branch=unstable to install a different branch.
-ie. install.sh --branch=unstable | bash
+add ```shell  -s -- --branch=unstable``` to install a different branch.
+ie. /install | bash -s -- --branch=unstable
 
 Uninstall, not that i can see why anyone would ever want that :D
 but incase it runs amok.... and so people don't have to dig around after it.
