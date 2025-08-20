@@ -9,3 +9,15 @@ image:
 scriptToRun: "/etc/scripts/ticker.sh"
 scriptMountPath: "/etc/scripts"
 
+# Node to pin the pod on (set at install/upgrade time)
+birthNode: ""
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - "{{ .Values.birthNode }}"
