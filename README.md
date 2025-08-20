@@ -17,7 +17,7 @@ Paladin will at times change the provider.yaml, if it rotates RPC through nodes.
 
 https://github.com/SGC41/akash-provider-paladin/blob/stable/docs/getting_started.txt
 
-add ```shell  -s -- --branch=unstable``` to install a different branch.
+add ``` -s -- --branch=unstable``` to install a different branch.
 ie. /install | bash -s -- --branch=unstable
 
 Uninstall, not that i can see why anyone would ever want that :D

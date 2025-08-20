@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.5.0
+# v2.5.2
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 TARGET_DIR="$HOME/akash-provider-paladin"
@@ -168,6 +168,9 @@ helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
   --namespace akash-services \
   --set buildID="$(date +%s)" \
   --set birthNode="$CURRENT_NODE" \
+  --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key=kubernetes.io/hostname \
+  --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].operator=In \
+  --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values[0]="$CURRENT_NODE" \
 && kubectl delete pod akash-provider-paladin-0 -n akash-services \
 && echo "Paladin local install completed"
 
