@@ -3,9 +3,10 @@ set -euo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.5.0
+# v2.3.3
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
+BRANCH="unstable"
 TARGET_DIR="$HOME/akash-provider-paladin"
 MANIFEST_TEMPLATE="$TARGET_DIR/install/install-cp-pod-template.yaml"
 TMP_MANIFEST="/tmp/secondary-cp-install.yaml"
@@ -23,19 +24,7 @@ done
 PROVIDER_SRC="$HOME/provider/provider.yaml"
 PRICE_SCRIPT_SRC="$HOME/provider/price_script_generic.sh"
 
-#BRANCH flags
 
-BRANCH="stable" # default
-for arg in "$@"; do
-  case $arg in
-    -b=*|--branch=*)
-      BRANCH="${arg#*=}"
-      shift
-      ;;
-  esac
-done
-echo "🚀 Installing Paladin from branch: $BRANCH"
-echo "   Want a different branch use --branch=unstable or such"
 
 # ───────────────────────────────────────────────────────
 # Clone or update repo cleanly
@@ -137,6 +126,27 @@ crontab -l 2>/dev/null | grep -v "$SCRIPT_PATH" | { cat; echo "$CRONLINE"; } | c
 
 # ───────────────────────────────────────────────────────
 
+echo "🚀 Installing or upgrading Helm chart..."
+helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
+  --namespace akash-services \
+  --set buildID="$(date +%s)" \
+&& kubectl delete pod akash-provider-paladin-0 -n akash-services \
+&& echo "Paladin local install completed"
+
+# ───────────────────────────────────────────────────────
+# Pre-deploy cleanup: remove any existing installer pods
+# ───────────────────────────────────────────────────────
+
+echo "🧹 Cleaning up any Pending installer pods…"
+kubectl delete pods \
+  -n akash-services \
+  -l app=paladin-installer \
+  --ignore-not-found
+
+# ───────────────────────────────────────────────────────
+# Deploy install pods to control-plane nodes (as before)
+# ───────────────────────────────────────────────────────
+echo "🛰 Deploying installer pods to each control plane…"
 
 # Discover current node reliably
 HOST_SHORT=$(hostname -s)
@@ -154,38 +164,6 @@ if [[ -z "$CURRENT_NODE" ]]; then
   exit 1
 fi
 echo "✔️ Running on: $CURRENT_NODE"
-
-
-#echo "🚀 Installing or upgrading Helm chart..."
-#helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
-#  --namespace akash-services \
-#  --set buildID="$(date +%s)" \
-#&& kubectl delete pod akash-provider-paladin-0 -n akash-services \
-#&& echo "Paladin local install completed"
-
-echo "🚀 Installing or upgrading Helm chart..."
-helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
-  --namespace akash-services \
-  --set buildID="$(date +%s)" \
-  --set birthNode="$CURRENT_NODE" \
-&& kubectl delete pod akash-provider-paladin-0 -n akash-services \
-&& echo "Paladin local install completed"
-
-
-# ───────────────────────────────────────────────────────
-# Pre-deploy cleanup: remove any existing installer pods
-# ───────────────────────────────────────────────────────
-
-echo "🧹 Cleaning up any Pending installer pods…"
-kubectl delete pods \
-  -n akash-services \
-  -l app=paladin-installer \
-  --ignore-not-found
-
-# ───────────────────────────────────────────────────────
-# Deploy install pods to control-plane nodes (as before)
-# ───────────────────────────────────────────────────────
-echo "🛰 Deploying installer pods to each control plane…"
 
 # Fetch all control-plane nodes
 CONTROL_PLANES=$(kubectl get nodes \

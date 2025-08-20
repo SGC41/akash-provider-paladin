@@ -20,52 +20,25 @@ spec:
     spec:
       terminationGracePeriodSeconds: 0
       serviceAccountName: {{ include "akash-provider-paladin.fullname" . }}-paladin
-
-      # Affinity rules
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: node-role.kubernetes.io/control-plane
-                    operator: Exists
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              preference:
-                matchExpressions:
-                  - key: kubernetes.io/hostname
-                    operator: In
-                    values:
-                      - {{ .Values.birthNode }}
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 50
-              podAffinityTerm:
-                topologyKey: kubernetes.io/hostname
-                labelSelector:
-                  matchLabels:
-                    app: {{ include "akash-provider-paladin.name" . }}
-
       nodeSelector:
         node-role.kubernetes.io/control-plane: ""
       tolerations:
         - key: "node-role.kubernetes.io/control-plane"
           operator: "Exists"
           effect: "NoSchedule"
-
       containers:
         - name: {{ include "akash-provider-paladin.fullname" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/bash", "-c"]
           args:
-            - |
-              set -euo pipefail
-              echo "Akash Provider Paladin v2.5.0"
-              # apt won't work not sure how best to solve it
-              # since it's not needed, I've left it as is...
+          - |
+            set -euo pipefail
+            echo "Akash Provider Paladin v2.4.2"
+            #apt won't work not sure how best to solve it
+            # since its not needed, i've left it as is...
 
-              {{ .Values.scriptToRun }}
+            {{ .Values.scriptToRun }}
           resources:
             requests:
               cpu: "50m"
