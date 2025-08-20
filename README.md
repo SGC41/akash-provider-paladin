@@ -7,7 +7,7 @@ Minor releases will usually be bug fixes, have an issue run the install command 
 
 Installation simply run the curl command from a single control plane node.
 ```shell
-curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/stable/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/stable/install.sh | bash -s -- --branch=unstable
 ```
 
 Note that there are some required knowledge when using Paladin.
