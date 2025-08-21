@@ -4,7 +4,43 @@ Paladin will help keep providers operational and safe.
 Please report bugs, should be pretty functional now.
 Minor releases will usually be bug fixes, have an issue run the install command again.
 
+
+Installation simply run the curl command from a single control plane node.
+```shell
+curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/stable/install.sh | bash
+```
+
+Note that there are some required knowledge when using Paladin.
+without it, you will have trouble changing your provider.yaml permanently.
+
+Paladin will at times change the provider.yaml, if it rotates RPC through nodes.
+
+https://github.com/SGC41/akash-provider-paladin/blob/stable/docs/getting_started.txt
+
+add ``` -s -- --branch=unstable``` to install a different branch.
+ie. /install | bash -s -- --branch=unstable
+
+Uninstall, not that i can see why anyone would ever want that :D
+but incase it runs amok.... and so people don't have to dig around after it.
+
+This might be the only way for one to easily shut it down, as its made to be resilient.
+```
+helm uninstall akash-provider-paladin -n akash-services
+```
+
+
 Paladin will help keep providers operational.
+- v2.5.3
+     Lots of more bug fixes for rare happen stances.
+
+- v2.5.0
+     Paladin pod will now favor running on, the control plane the install command was run on.
+     This simplifies logging and other cluster related annoyances.
+     The pod will still move freely between the control planes, if issues should arise.
+
+     But this way logs will usually be in the same place...
+
+     Also improved branch selection, so i won't push the wrong branch install script again.
 
 - v2.4.0
      Cold wallet feature added.
@@ -39,30 +75,6 @@ Lists all terminating and error state pods across all namespaces and deletes the
 
 Now runs its own pod called akash-provider-paladin, which cannot get stuck and handles the stuck pod checks and deletions.
 100% cluster support.
-
-
-
-Installation simply run the curl command from a single control plane node.
-```shell
-curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/stable/install.sh | bash
-```
-
-Note that there are some required knowledge when using Paladin.
-without it, you will have trouble changing your provider.yaml permanently.
-
-Paladin will at times change the provider.yaml, if it rotates RPC through nodes.
-
-https://github.com/SGC41/akash-provider-paladin/blob/stable/docs/getting_started.txt
-
-
-Uninstall, not that i can see why anyone would ever want that :D
-but incase it runs amok.... and so people don't have to dig around after it.
-
-This might be the only way for one to easily shut it down, as its made to be resilient.
-```
-helm uninstall akash-provider-paladin -n akash-services
-```
-
 
 
 Paladin Pod Shutdown Command
@@ -117,5 +129,3 @@ each control plane will log its RPC-rotate.sh runs in /var/log/rpc-rotate.log
 if you are running v1, you should manually remove it or use the uninstall script for v1.
 on V2.0 or later just rerun the install and it will upgrade to the latest version.
 Enjoy.  and let me know if there are any issues.
-
-
