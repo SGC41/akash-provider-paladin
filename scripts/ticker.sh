@@ -1,6 +1,5 @@
 #!/bin/bash
 #
-# ticker.sh v2.2.10
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
@@ -14,11 +13,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
+#base.conf 
+CURRENT_SCRIPT_VERSION="v2.5.5"
 while true; do
   echo "============================"
   echo "Script cycle started at: $(date)"
-  echo "v2.5.1" 
+  echo $CURRENT_SCRIPT_VERSION 
   echo "============================"
 
 
