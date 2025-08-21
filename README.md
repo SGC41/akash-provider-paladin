@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.5.1
+# Akash Provider Paladin v2.5.3
 Paladin will help keep providers operational and safe.
 
 Please report bugs, should be pretty functional now.
@@ -30,6 +30,9 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.5.3
+     Lots of more bug fixes for rare happen stances.
+
 - v2.5.0
      Paladin pod will now favor running on, the control plane the install command was run on.
      This simplifies logging and other cluster related annoyances.

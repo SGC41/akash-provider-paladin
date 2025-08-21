@@ -1,5 +1,5 @@
 #!/bin/bash
-# v2.3.5
+# v2.3.0
 # Simple Description of funtions
 #
 # changed from 1hr to 16 minutes, and will change checks from 30 to 20.
@@ -157,27 +157,11 @@ if [[ "$IS_ONLINE" == "false" ]]; then
     echo "$(log_stamp) [log] [Info][🚨] Provider has been offline > 16 minutes"
 
     # ── Spin down provider pod ────────────────────────────────
-    # -- other stuff might try to keep it running, so have to make sure its down...
-    echo "scaling down provider"
     kubectl -n akash-services scale statefulsets akash-provider --replicas=0
     kubectl -n akash-services get statefulsets
-    echo "creating trigger start provider and sleeping for 16 minutes before checking again, tested 7min a few times didn't seem to work"
 
-    sleep 4
-    echo "showing verification provider service has been stopped"
-    kubectl -n akash-services get statefulsets && kubectl -n akash-services get pods -l app=akash-provide
-
-    echo "start-provider" > $HOME/akash-provider-paladin/.start-provider.tmp && sleep 960 && kubectl -n akash-services scale statefulsets akash-provider --replicas=1 && rm $HOME/akash-provider-paladin/.start-provider.tmp && \
-    echo "showing verification provider service is still stopped after sleep and then starting" && \
-    kubectl -n akash-services get statefulsets && kubectl -n akash-services get pods -l app=akash-provide && \
-    echo "provider akash console online state should hopefully now be recovered"
-
-    sleep 15
-    echo "step to verify it's been started."
-    kubectl -n akash-services get statefulsets && kubectl -n akash-services get pods -l app=akash-provide
-
-    echo "insert secondary check here... or loop or add as function"
-# ?? i don't think so    echo "$(log_stamp) [log] [Event] Akash Console Provider online issue detected, provider spun down until next Paladin check."
+    echo "start-provider" > $HOME/akash-provider-paladin/.start-provider.tmp && sleep 1800 && kubectl -n akash-services scale statefulsets akash-provider --replicas=1 && rm $HOME/akash-provider-paladin/.start-provider.tmp
+    echo "$(log_stamp) [log] [Event] Akash Console Provider online issue detected, provider spun down until next Paladin check."
 
     # ── Register note in etcd memory store ─────────────────── not working
     #ISSUE_KEY="AKASH-CONSOLE-OFFLINE-ISSUE"

@@ -18,7 +18,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 while true; do
   echo "============================"
   echo "Script cycle started at: $(date)"
-  echo "v2.2.10" 
+  echo "v2.5.1" 
   echo "============================"
 
 
@@ -44,9 +44,9 @@ minute=$(date +%M)
 
 
   if [[ "$RESTARTS" -ge 3 ]]; then
-    echo "RPC Rotate Triggered"
+    echo "RPC Rotate Triggered sent"
      echo "rpc-rotate=true" >> /host/tmp/control-plane.do
-    echo "can take up to 5 minutes"
+    echo "can take up to a few minutes"
   fi
 
   # ── Run stuck pod cleanup at :00 and :30 ── changed to 20min
@@ -54,7 +54,7 @@ minute=$(date +%M)
     echo "Stuck Pod Cleanup Triggered at minute $minute"
     "$SCRIPT_DIR/clear_stuck_pods.sh"
 
-    echo "check-unpaid-leases=true ; --execute" > /host/tmp/control-plane.do && \
+    echo "check-unpaid-leases=true ; --execute" >> /host/tmp/control-plane.do && \
     echo "check for unpaid leases request sent to control-plane"
 
     echo "akash-console-prov-on-check=true" >> /host/tmp/control-plane.do && \

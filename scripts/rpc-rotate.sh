@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# rpc-rotate.sh v2.3.3
+# rpc-rotate.sh v2.5.1
 set -uo pipefail
 export ETCDCTL_API=3
 
@@ -61,6 +61,7 @@ if ! command -v jq &> /dev/null; then
   echo "jq not found, installing..."
   sudo apt install -y jq
 fi
+
 
 if $CHECK_ONLY; then
   if [[ ! -f "$STATE" || "$(cat "$STATE")" != "$TODAY" ]]; then
@@ -165,6 +166,7 @@ rotate_rpc() {
         break
       }
     done
+    echo "$TODAY" > "$STATE"
   fi
 
   for ((offset=1; offset<=${#entries[@]}; offset++)); do
