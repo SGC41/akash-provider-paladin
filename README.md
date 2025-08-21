@@ -33,8 +33,8 @@ Paladin will help keep providers operational.
 - v2.5.3
      Lots of more bug fixes for rare happen stances.
 
-- v2.5.0 - not working... :/
-     Paladin pod will now favor running on, the control plane the install command was run on.
+- v2.5.0 - 
+     Paladin pod should but isn't favoring running on, the control plane the install command was run on.
      This simplifies logging and other cluster related annoyances.
      The pod will still move freely between the control planes, if issues should arise.
 
