@@ -191,21 +191,12 @@ fi
 
 echo "[*] installing cronjob on local control plane..."
 
-          CRONLINE_CMD='/bin/bash $HOME/akash-provider-paladin/scripts/rpc-rotate.sh'
-          NEW_CRONLINE_CMD='/bin/bash $HOME/akash-provider-paladin/scripts/ticker-control-plane.sh'
+          NEW_CRONLINE_CMD="/bin/bash $HOME/akash-provider-paladin/scripts/ticker-control-plane.sh"
           CRONTAB_FILE='/var/spool/cron/crontabs/root'
-          NEW_CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && $NEW_CRONLINE_CMD >> /var/log/paladin.log 2>&1 && rm -f /tmp/control>
+          NEW_CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && $NEW_CRONLINE_CMD >> /var/log/paladin.log 2>&1 && rm -f /tmp/control-plane.do"
 
           sed -i '\|akash-provider-paladin|d' /var/spool/cron/crontabs/root && \
           echo "$NEW_CRONLINE" >> "$CRONTAB_FILE"
-
-
-#old disabled malfunctioning
-#CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash \"$TARGET_DIR/scripts/ticker-control-plane.sh\" >> /var/log/paladin.log 2>&1 && rm -f /tmp/control-plane.do"
-#SCRIPT_PATH="$TARGET_DIR/scripts/rpc-rotate.sh"
-
-# Remove any existing cron jobs that reference the script (regardless of timing)
-#crontab -l 2>/dev/null | grep -v "$SCRIPT_PATH" | { cat; echo "$CRONLINE"; } | crontab -
 
 # ───────────────────────────────────────────────────────
 
