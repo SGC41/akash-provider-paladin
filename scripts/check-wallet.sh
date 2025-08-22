@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
 
-# check_wallet.sh v1.32
+# check_wallet.sh v1.33
 # ------------------------------------------
 # Checks AKT and USDC balances in a given wallet using the akash CLI.
 # If balance exceeds (minimum + delta) for a token, moves the excess
 # to a secondary wallet. Defaults to dry-run unless --execute is used.
 
 # Provider.yaml entries for ease of customization.
-# paladin_provider_wallet_max_allowed_akt: 20                                           ## Defaults to 20 AKT
-# paladin_provider_wallet_max_allowed_akt_delta: 50                                     ## Defaults to 50 AKT
+## Defaults to 20 and 50 AKT
+# paladin_provider_wallet_max_allowed_akt: 20
+# paladin_provider_wallet_max_allowed_akt_delta: 50
 
-# paladin_provider_wallet_max_allowed_usdc: 20                                          ## Defaults to 20 AKT
-# paladin_provider_wallet_max_allowed_usdc_delta: 50                                    ## Defaults to 50 AKT
+## Defaults to 20 and 50 USDC
+# paladin_provider_wallet_max_allowed_usdc: 20
+# paladin_provider_wallet_max_allowed_usdc_delta: 50
 
 # paladin_cold_wallet: <your cold akash wallet, should beging with akash....>           ## disabling script while not set in paladin provider.yaml
 

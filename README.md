@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.5.7
+# Akash Provider Paladin v2.5.8
 Paladin will help keep providers operational and safe.
 
 Please report bugs, should be pretty functional now.
@@ -30,6 +30,10 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+
+- v2.5.8
+     Asks for cold wallet during install and automatically appends it to provider.yaml
+
 - v2.5.6  
      feature from 2.5.0 now works. 
 
