@@ -30,6 +30,7 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+
 - v2.5.6  
      feature from 2.5.0 now works. 
 
@@ -42,6 +43,12 @@ Paladin will help keep providers operational.
 
 - v2.5.0
      Paladin pod will now favor running on, the control plane the install command was run on.
+=======
+- v2.5.3
+     Lots of more bug fixes for rare happen stances.
+
+- v2.5.0 - 
+     Paladin pod should but isn't favoring running on, the control plane the install command was run on.
      This simplifies logging and other cluster related annoyances.
      The pod will still move freely between the control planes, if issues should arise.
 
@@ -136,5 +143,3 @@ each control plane will log its RPC-rotate.sh runs in /var/log/rpc-rotate.log
 if you are running v1, you should manually remove it or use the uninstall script for v1.
 on V2.0 or later just rerun the install and it will upgrade to the latest version.
 Enjoy.  and let me know if there are any issues.
-
-
