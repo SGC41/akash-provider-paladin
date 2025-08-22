@@ -124,7 +124,7 @@ else
 fi
 
 # CONFIG points to provider.yaml in your env
-CONFIG="$HOME/akash-provider-paladin/provider.yaml"
+#CONFIG="$HOME/akash-provider-paladin/provider.yaml"
 
 # Read current value (strip possible quotes)
 COLD_WALLET=$(yq -r '.paladin_cold_wallet // ""' "$CONFIG" | tr -d '"')
