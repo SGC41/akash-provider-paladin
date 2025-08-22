@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.5.14
+# v2.5.15
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 TARGET_DIR="$HOME/akash-provider-paladin"
@@ -138,6 +138,7 @@ COLD_WALLET=$(yq -r '.paladin_cold_wallet // "NONE"' "$CONFIG" | tr -d '"')
   else
       # Prompt until valid wallet or empty entry
       while true; do
+          USER_INPUT=NONE
           read -rp "Enter cold wallet address (leave empty to skip): " USER_INPUT
           if [[ -z "$USER_INPUT" ]]; then
               echo "No cold wallet will be set."
