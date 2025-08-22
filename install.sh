@@ -3,10 +3,9 @@ set -euo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.3.3
+# v2.5.12
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
-BRANCH="unstable"
 TARGET_DIR="$HOME/akash-provider-paladin"
 MANIFEST_TEMPLATE="$TARGET_DIR/install/install-cp-pod-template.yaml"
 TMP_MANIFEST="/tmp/secondary-cp-install.yaml"
@@ -20,11 +19,23 @@ ETCD_KEY="/etc/ssl/etcd/ssl/node-${NODE_SHORT}-key.pem"
 for f in "$ETCD_CACERT" "$ETCD_CERT" "$ETCD_KEY"; do
   [[ -r "$f" ]] || { echo "❌ Cannot read etcd file: $f" >&2; exit 1; }
 done
-
+source default.conf
 PROVIDER_SRC="$HOME/provider/provider.yaml"
 PRICE_SCRIPT_SRC="$HOME/provider/price_script_generic.sh"
 
+#BRANCH flags
 
+BRANCH="stable" # default
+for arg in "$@"; do
+  case $arg in
+    -b=*|--branch=*)
+      BRANCH="${arg#*=}"
+      shift
+      ;;
+  esac
+done
+echo "🚀 Installing Paladin from branch: $BRANCH"
+echo "   Want a different branch use --branch=unstable or such"
 
 # ───────────────────────────────────────────────────────
 # Clone or update repo cleanly
@@ -112,41 +123,73 @@ else
 
 fi
 
+# CONFIG points to provider.yaml in your env
+#CONFIG="$HOME/akash-provider-paladin/provider.yaml"
+
+# Read current value (strip possible quotes)
+COLD_WALLET=$(yq -r '.paladin_cold_wallet // ""' "$CONFIG" | tr -d '"')
+
+ If a cold wallet already exists (non-empty), we’re done with this block
+  if [[ -n "$COLD_WALLET" ]]; then
+      echo "Cold wallet already set to: $COLD_WALLET"
+      # Continue with the rest of the script
+  else
+      # Prompt until valid wallet or empty entry
+      while true; do
+          read -rp "Enter cold wallet address (leave empty to skip): " USER_INPUT
+          if [[ -z "$USER_INPUT" ]]; then
+              echo "No cold wallet will be set."
+              break
+          fi
+
+          # Strip quotes just in case
+          USER_INPUT_CLEAN=$(echo "$USER_INPUT" | tr -d '"')
+
+          # Validate with provider-services
+          if provider-services keys parse "$USER_INPUT_CLEAN" >/dev/null 2>&1; then
+              echo "Valid Akash wallet address detected: $USER_INPUT_CLEAN"
+
+              # Ensure the other paladin config lines exist; append if missing
+              grep -q '^paladin_provider_wallet_max_allowed_akt:' "$CONFIG" \
+                  || echo "paladin_provider_wallet_max_allowed_akt: 20" >> "$CONFIG"
+              grep -q '^paladin_provider_wallet_max_allowed_akt_delta:' "$CONFIG" \
+                  || echo "paladin_provider_wallet_max_allowed_akt_delta: 50" >> "$CONFIG"
+
+              grep -q '^paladin_provider_wallet_max_allowed_usdc:' "$CONFIG" \
+                  || echo "paladin_provider_wallet_max_allowed_usdc: 20" >> "$CONFIG"
+              grep -q '^paladin_provider_wallet_max_allowed_usdc_delta:' "$CONFIG" \
+                  || echo "paladin_provider_wallet_max_allowed_usdc_delta: 50" >> "$CONFIG"
+
+              # Now set/update the cold wallet line
+              if grep -Eq '^\s*paladin_cold_wallet:' "$CONFIG"; then
+                  # Replace existing line (handles quotes or no quotes)
+                  sed -i -E "s|^\s*paladin_cold_wallet:.*|paladin_cold_wallet: \"$USER_INPUT_CLEAN\"|" "$CONFIG"
+              else
+                  echo "paladin_cold_wallet: \"$USER_INPUT_CLEAN\"" >> "$CONFIG"
+              fi
+              break
+          else
+              echo "Invalid Akash wallet address: $USER_INPUT_CLEAN"
+              echo "Please try again or press Enter to skip."
+          fi
+      done
+  fi
+
+
 # ______________________________
 # Cronjob injection and clean
 # _________________________________
 
-echo "[*] Ensuring RPC rotation cronjob on local control plane..."
+echo "[*] Installing cronjob on local control plane..."
 
 CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash \"$TARGET_DIR/scripts/ticker-control-plane.sh\" >> /var/log/paladin.log 2>&1 && rm -f /tmp/control-plane.do"
-SCRIPT_PATH="$TARGET_DIR/scripts/rpc-rotate.sh"
+SCRIPT_PATH="akash-provider-paladin"
 
 # Remove any existing cron jobs that reference the script (regardless of timing)
 crontab -l 2>/dev/null | grep -v "$SCRIPT_PATH" | { cat; echo "$CRONLINE"; } | crontab -
 
 # ───────────────────────────────────────────────────────
 
-echo "🚀 Installing or upgrading Helm chart..."
-helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
-  --namespace akash-services \
-  --set buildID="$(date +%s)" \
-&& kubectl delete pod akash-provider-paladin-0 -n akash-services \
-&& echo "Paladin local install completed"
-
-# ───────────────────────────────────────────────────────
-# Pre-deploy cleanup: remove any existing installer pods
-# ───────────────────────────────────────────────────────
-
-echo "🧹 Cleaning up any Pending installer pods…"
-kubectl delete pods \
-  -n akash-services \
-  -l app=paladin-installer \
-  --ignore-not-found
-
-# ───────────────────────────────────────────────────────
-# Deploy install pods to control-plane nodes (as before)
-# ───────────────────────────────────────────────────────
-echo "🛰 Deploying installer pods to each control plane…"
 
 # Discover current node reliably
 HOST_SHORT=$(hostname -s)
@@ -164,6 +207,44 @@ if [[ -z "$CURRENT_NODE" ]]; then
   exit 1
 fi
 echo "✔️ Running on: $CURRENT_NODE"
+
+
+#echo "🚀 Installing or upgrading Helm chart..."
+#helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
+#  --namespace akash-services \
+#  --set buildID="$(date +%s)" \
+#&& kubectl delete pod akash-provider-paladin-0 -n akash-services \
+#&& echo "Paladin local install completed"
+
+echo "🚀 Installing or upgrading Helm chart..."
+helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
+  --namespace akash-services \
+  --set buildID="$(date +%s)" \
+  --set birthNode="$CURRENT_NODE" \
+  --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key=node-role.kubernetes.io/control-plane \
+  --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].operator=Exists \
+  --set affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].weight=100 \
+  --set affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].preference.matchExpressions[0].key=kubernetes.io/hostname \
+  --set affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].preference.matchExpressions[0].operator=In \
+  --set affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].preference.matchExpressions[0].values[0]="$CURRENT_NODE" \
+&& kubectl delete pod akash-provider-paladin-0 -n akash-services \
+&& echo "Paladin local install completed"
+
+
+# ───────────────────────────────────────────────────────
+# Pre-deploy cleanup: remove any existing installer pods
+# ───────────────────────────────────────────────────────
+
+echo "🧹 Cleaning up any Pending installer pods…"
+kubectl delete pods \
+  -n akash-services \
+  -l app=paladin-installer \
+  --ignore-not-found
+
+# ───────────────────────────────────────────────────────
+# Deploy install pods to control-plane nodes (as before)
+# ───────────────────────────────────────────────────────
+echo "🛰 Deploying installer pods to each control plane…"
 
 # Fetch all control-plane nodes
 CONTROL_PLANES=$(kubectl get nodes \
