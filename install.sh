@@ -3,7 +3,7 @@ set -euo pipefail
 #source "$HOME/akash-provider-paladin/default.conf"
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.5.7
+# v2.5.9
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 TARGET_DIR="$HOME/akash-provider-paladin"
@@ -195,7 +195,7 @@ echo "[*] installing cronjob on local control plane..."
           CRONTAB_FILE='/var/spool/cron/crontabs/root'
           NEW_CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && $NEW_CRONLINE_CMD >> /var/log/paladin.log 2>&1 && rm -f /tmp/control-plane.do"
 
-          sed -i '\|akash-provider-paladin|d' /var/spool/cron/crontabs/root && \
+          sed -i sed -i "\\|akash-provider-paladin|d" /var/spool/cron/crontabs/root && \
           echo "$NEW_CRONLINE" >> "$CRONTAB_FILE"
 
 # ───────────────────────────────────────────────────────
