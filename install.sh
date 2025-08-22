@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
+source "$HOME/akash-provider-paladin/default.conf"
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.5.4
+# v2.5.6
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 TARGET_DIR="$HOME/akash-provider-paladin"
@@ -134,7 +134,7 @@ echo "[*] installing cronjob on local control plane..."
           CRONTAB_FILE='/var/spool/cron/crontabs/root'
           NEW_CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && $NEW_CRONLINE_CMD >> /var/log/paladin.log 2>&1 && rm -f /tmp/control>
 
-          sed -i '/akash-provider-paladin/d' /var/spool/cron/crontabs/root && \
+          sed -i '\|akash-provider-paladin|d' /var/spool/cron/crontabs/root && \
           echo "$NEW_CRONLINE" >> "$CRONTAB_FILE"
 
 
@@ -174,30 +174,18 @@ echo "✔️ Running on: $CURRENT_NODE"
 #&& echo "Paladin local install completed"
 
 echo "🚀 Installing or upgrading Helm chart..."
-#helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
-#  --namespace akash-services \
-#  --set buildID="$(date +%s)" \
-#  --set birthNode="$CURRENT_NODE" \
-#  --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key=kubernetes.io/hostname \
-#  --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].operator=In \
-#  --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values[0]="$CURRENT_NODE" \
-#&& kubectl delete pod akash-provider-paladin-0 -n akash-services \
+
 helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
   --namespace akash-services \
   --set buildID="$(date +%s)" \
   --set birthNode="$CURRENT_NODE" \
-  \
-  # Hard requirement: must be a control-plane node
   --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key=node-role.kubernetes.io/control-plane \
   --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].operator=Exists \
-  \
-  # Soft preference: strongly prefer the birth node
   --set affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].weight=100 \
   --set affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].preference.matchExpressions[0].key=kubernetes.io/hostname \
   --set affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].preference.matchExpressions[0].operator=In \
   --set affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].preference.matchExpressions[0].values[0]="$CURRENT_NODE" \
 && kubectl delete pod akash-provider-paladin-0 -n akash-services \
-
 && echo "Paladin local install completed"
 
 
@@ -239,3 +227,4 @@ for NODE in $CONTROL_PLANES; do
 done
 
 echo "✅ All installer pods launched in akash-services namespace."
+echo "Paladin install complete $CURRENT_PALADIN_VERSION"

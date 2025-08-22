@@ -10,15 +10,19 @@
 # 
 
 
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-#base.conf 
-CURRENT_SCRIPT_VERSION="v2.5.5"
+
+CURRENT_PALADIN_VERSION="v2.5.0"
+
+# Load defaults
+source "$HOME/akash-provider-paladin/default.conf"
+
 while true; do
   echo "============================"
   echo "Script cycle started at: $(date)"
-  echo $CURRENT_SCRIPT_VERSION 
+  echo $CURRENT_PALADIN_VERSION 
   echo "============================"
 
 

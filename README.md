@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.5.3
+# Akash Provider Paladin v2.5.6
 Paladin will help keep providers operational and safe.
 
 Please report bugs, should be pretty functional now.
@@ -30,6 +30,13 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.5.6  
+     feature from 2.5.0 now works. 
+
+     added edit-price.sh . for editing price script in the correct way for paladin.
+     fixed so the install will only, leave one paladin entry in the crontab.
+     paladin pod should now restart less, not that it matters much.
+
 - v2.5.3
      Lots of more bug fixes for rare happen stances.
 
