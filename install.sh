@@ -19,7 +19,6 @@ ETCD_KEY="/etc/ssl/etcd/ssl/node-${NODE_SHORT}-key.pem"
 for f in "$ETCD_CACERT" "$ETCD_CERT" "$ETCD_KEY"; do
   [[ -r "$f" ]] || { echo "❌ Cannot read etcd file: $f" >&2; exit 1; }
 done
-source default.conf
 PROVIDER_SRC="$HOME/provider/provider.yaml"
 PRICE_SCRIPT_SRC="$HOME/provider/price_script_generic.sh"
 
@@ -68,6 +67,8 @@ cd "$TARGET_DIR"
 echo "📌 Working directory: $(pwd)"
 
 
+#Load configurations - had to come after repo clone.
+source default.conf
 
 
 # Dynamically select etcd certs based on node shortname
