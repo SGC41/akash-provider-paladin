@@ -125,11 +125,10 @@ fi
 
 # CONFIG points to provider.yaml in your env
 #CONFIG="$HOME/akash-provider-paladin/provider.yaml"
-
 # Read current value (strip possible quotes)
 COLD_WALLET=$(yq -r '.paladin_cold_wallet // ""' "$CONFIG" | tr -d '"')
 
- If a cold wallet already exists (non-empty), we’re done with this block
+# If a cold wallet already exists (non-empty), we’re done with this block
   if [[ -n "$COLD_WALLET" ]]; then
       echo "Cold wallet already set to: $COLD_WALLET"
       # Continue with the rest of the script
