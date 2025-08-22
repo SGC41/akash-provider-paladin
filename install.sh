@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.5.12
+# v2.5.13
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 TARGET_DIR="$HOME/akash-provider-paladin"
@@ -123,6 +123,8 @@ else
 
 fi
 
+$HOME/akash-provider-paladin/update-local-provider-yaml.sh
+
 # CONFIG points to provider.yaml in your env
 #CONFIG="$HOME/akash-provider-paladin/provider.yaml"
 # Read current value (strip possible quotes)
@@ -166,6 +168,7 @@ COLD_WALLET=$(yq -r '.paladin_cold_wallet // ""' "$CONFIG" | tr -d '"')
               else
                   echo "paladin_cold_wallet: \"$USER_INPUT_CLEAN\"" >> "$CONFIG"
               fi
+              $HOME/akash-provider-paladin/update-cluster-provider-yaml.sh
               break
           else
               echo "Invalid Akash wallet address: $USER_INPUT_CLEAN"
