@@ -14,10 +14,10 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-CURRENT_PALADIN_VERSION="v2.5.0"
+CURRENT_PALADIN_VERSION="v2.5.6"
 
 # Load defaults
-source "$HOME/akash-provider-paladin/default.conf"
+#source "etc/scripts/default.conf"
 
 while true; do
   echo "============================"
