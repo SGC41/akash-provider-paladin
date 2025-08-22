@@ -195,7 +195,7 @@ echo "[*] installing cronjob on local control plane..."
           CRONTAB_FILE='/var/spool/cron/crontabs/root'
           NEW_CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && $NEW_CRONLINE_CMD >> /var/log/paladin.log 2>&1 && rm -f /tmp/control-plane.do"
 
-          sed -i sed -i "\\|akash-provider-paladin|d" /var/spool/cron/crontabs/root && \
+          sed -i "\\|akash-provider-paladin|d" /var/spool/cron/crontabs/root && \
           echo "$NEW_CRONLINE" >> "$CRONTAB_FILE"
 
 # ───────────────────────────────────────────────────────
