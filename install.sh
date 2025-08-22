@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-source "$HOME/akash-provider-paladin/default.conf"
+#source "$HOME/akash-provider-paladin/default.conf"
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
 # v2.5.7
@@ -132,7 +132,7 @@ fi
 # _________________
 
 # CONFIG points to provider.yaml in your env
-# Example: CONFIG="/root/akash-provider-paladin/config/provider.yaml"
+CONFIG="$HOME/akash-provider-paladin/provider.yaml"
 
 # Read current value (strip possible quotes)
 COLD_WALLET=$(yq -r '.paladin_cold_wallet // ""' "$CONFIG" | tr -d '"')
