@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.5.13
+# v2.5.14
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 TARGET_DIR="$HOME/akash-provider-paladin"
@@ -129,10 +129,10 @@ $HOME/akash-provider-paladin/update-local-provider-yaml.sh
 # CONFIG points to provider.yaml in your env
 #CONFIG="$HOME/akash-provider-paladin/provider.yaml"
 # Read current value (strip possible quotes)
-COLD_WALLET=$(yq -r '.paladin_cold_wallet // ""' "$CONFIG" | tr -d '"')
+COLD_WALLET=$(yq -r '.paladin_cold_wallet // "NONE"' "$CONFIG" | tr -d '"')
 
 # If a cold wallet already exists (non-empty), we’re done with this block
-  if [[ -n "$COLD_WALLET" ]]; then
+  if [[ "$COLD_WALLET" != "NONE" ]]; then
       echo "Cold wallet already set to: $COLD_WALLET"
       # Continue with the rest of the script
   else
