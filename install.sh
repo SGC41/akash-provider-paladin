@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.5.15
+# v2.6.1
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 TARGET_DIR="$HOME/akash-provider-paladin"
@@ -186,7 +186,7 @@ COLD_WALLET=$(yq -r '.paladin_cold_wallet // "NONE"' "$CONFIG" | tr -d '"')
 
 echo "[*] Installing cronjob on local control plane..."
 
-CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash \"$TARGET_DIR/scripts/ticker-control-plane.sh\" >> /var/log/paladin.log 2>&1 && rm -f /tmp/control-plane.do"
+CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash "/root/akash-provider-paladin/scripts/ticker-control-plane.sh" >> "/var/log/akash-provider-paladin/$(date +\%d)-this-month.log" 2>&1 && rm -f /tmp/control-plane.do"
 SCRIPT_PATH="akash-provider-paladin"
 
 # Remove any existing cron jobs that reference the script (regardless of timing)
@@ -211,14 +211,6 @@ if [[ -z "$CURRENT_NODE" ]]; then
   exit 1
 fi
 echo "✔️ Running on: $CURRENT_NODE"
-
-
-#echo "🚀 Installing or upgrading Helm chart..."
-#helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
-#  --namespace akash-services \
-#  --set buildID="$(date +%s)" \
-#&& kubectl delete pod akash-provider-paladin-0 -n akash-services \
-#&& echo "Paladin local install completed"
 
 echo "🚀 Installing or upgrading Helm chart..."
 helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
