@@ -14,7 +14,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-CURRENT_PALADIN_VERSION="v2.5.7"
+CURRENT_PALADIN_VERSION="v2.6.0"
 
 # Load defaults
 #source "etc/scripts/default.conf"

@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.5.15
+# Akash Provider Paladin v2.6.0
 Paladin will help keep providers operational and safe.
 
 Please report bugs, should be pretty functional now.
@@ -31,6 +31,9 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.6.0
+     Critical fix permanent, with failover for looping withdrawal attempts on unkilled closed leases.
+     Improved logging, logs will now be placed in /var/log/akash-provider-paladin/today's monthly day and any older than 23 days are deleted.
 
 - v2.5.15
      Updated Install command, for prompt support.

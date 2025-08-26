@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# Paladin v2.3.0
-# check-unpaid-leases.sh v1.0.3
+# Paladin v2.6.0
+# check-unpaid-leases.sh v1.1.0
 # creator SGC | DCnorse
-# 2025-08-04
+# 2025-08-26
 #
 # Features
 # Checks for unpaid leases, by introducing delta triggered withdrawals of all leases.
@@ -44,7 +44,7 @@
 # but it does its job when run...  ./check-unpaid-leases.sh --execute
 #
 
-set -euo pipefail
+set -uo pipefail
 trap 'echo "[Crash] Exited at line $LINENO"' ERR
 
 snap list yq || sudo snap install yq
@@ -80,8 +80,7 @@ if [[ $WITHDRAWAL_PERIOD_RAW =~ ^([0-9]+)h$ ]]; then
   echo "$(date -u '+[%Y-%m-%d %H:%M:%S]')[Warn] Invalid withdrawally period=$WITHDRAWAL_PERIOD_RAW, defaulting to 144h" >&2
   WITHDRAWAL_HOURS=144
 fi
-# assume ~6s block time => 600 blocks/hour
-WITHDRAWAL_BLOCKS=$(( WITHDRAWAL_HOURS * 600 ))
+
 
 # thresholds & files
 MIN_USD_THRESHOLD=$(yq -r '.paladin_unpaid_withdraw_trigger // 10' "$CONFIG")
@@ -294,13 +293,13 @@ xargs -I{} kubectl -n lease delete manifest {}
 EOF
 )
 
-  # extract block at which it closed
+# Action logic
 
 if [[ $state == "closed" ]]; then
   if grep -qx "$key" "$HOME/akash-provider-paladin/.withdrawn.tmp"; then
+    $DEBUG && echo "lease exists in  withdrawn file"
     closed_on=$(jq -r '.lease.closed_on' <<<"$raw")
-    if (( HEIGHT - closed_on >= WITHDRAWAL_BLOCKS )); then
-
+    if (( HEIGHT > closed_on + 10   )); then
       if [[ -n "$akash_lease_ns" ]]; then
         echo "$kill_cmd" >> "$KILL_FILE"
         if [[ $action == "none" ]]; then
@@ -341,16 +340,17 @@ fi
 
 
 # Continue with other state checks, e.g., active lease thresholds
-if (( $(awk "BEGIN{print($delta_usd >= $MIN_USD_THRESHOLD)}") )); then
-  echo "$withdraw_cmd" | tee -a "$WITHDRAW_FILE"
-  if [[ $action == "none" ]]; then
-     if [[ $EXECUTE == "true" ]]; then  action="Withdraw"; else
-            action="Withdraw_Query"
-     fi
-  reason="Delta>Min"
+if [[ $state != "closed" ]]; then
+  if (( $(awk "BEGIN{print($delta_usd >= $MIN_USD_THRESHOLD)}") )); then
+    echo "$withdraw_cmd" | tee -a "$WITHDRAW_FILE"
+    if [[ $action == "none" ]]; then
+       if [[ $EXECUTE == "true" ]]; then  action="Withdraw"; else
+              action="Withdraw_Query"
+       fi
+    reason="Delta>Min"
+    fi
   fi
 fi
-
 
    # 2k) build display line
     lease_rows+=$(printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%-7.7s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
