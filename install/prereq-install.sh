@@ -1,5 +1,5 @@
 #!/bin/bash
-# v2.3.1
+# v2.5.14
 # Commands added here will be installed on all control planes in the cluster, during paladin reinstall / upgrades
 
 sudo apt install wget jq -y
@@ -22,7 +22,7 @@ if [ "$min" != "$baseline" ]; then
     "https://github.com/akash-network/provider/releases/download/v${baseline}/provider-services_${baseline}_linux_amd64.deb"
 
   dpkg -i provider-services*.deb
-  rm /usr/local/bin/provider-services
+  rm -f /usr/local/bin/provider-services
   provider-services version
   hash -r
 
@@ -30,6 +30,10 @@ else
   echo "Your version ($version) is ≥ v$baseline — no update needed."
 fi
 
+#log setup
+sudo mkdir -p /var/log/akash-provider-paladin
+sudo chown root:root /var/log/akash-provider-paladin
+sudo chmod 755 /var/log/akash-provider-paladin
 
 #Helm
 cd /$HOME
