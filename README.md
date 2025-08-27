@@ -141,8 +141,9 @@ kubectl logs akash-provider-paladin-0 -n akash-services
 ```
 
 Notes:
-Versioning is a bit sloppy (still learning), the kubectl log can only show logs for the pod, which isn't everything, since RPC rotates happen on control planes.
-each control plane will log its RPC-rotate.sh runs in /var/log/rpc-rotate.log
+Versioning is a bit sloppy (still learning), the kubectl log can only show logs for the pod, which isn't everything, since scripts run on control planes.
+each control plane can log, but logging will happen on the control plane, hosting the akash-provider-paladin will log be saved in /var/log/akash-provider-paladin/
+The akash-provider-paladin pod will now favor the control plane it was installed on, and thus logs wil usually exist on that control plane.
 
 if you are running v1, you should manually remove it or use the uninstall script for v1.
 on V2.0 or later just rerun the install and it will upgrade to the latest version.
