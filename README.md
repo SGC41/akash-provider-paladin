@@ -142,6 +142,17 @@ Scaling down for maintenance.
 https://akash.network/docs/providers/provider-faq-and-guide/maintenance-logs-and-troubleshooting/
 ```
 
+most if not all, non timing related logging will be accessible here.
+23 days worth of logs will be kept, change the date if you need an older one. 
+
+Note -  Logs will be created on the control-plane that hosted the paladin pod at the time of events.
+        However... the pod favors the control-plane it was installed on, and thus logs will usually be there.
+```
+nano /var/log/akash-provider-paladin/$(date +\%d)-this-month.log
+```
+
+The Paladin pod logs are nearly useless, since its only a cluster timer, to avoid split brain behavior and pod downtime.
+
 ```
 kubectl logs akash-provider-paladin-0 -n akash-services
 ```

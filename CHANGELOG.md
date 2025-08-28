@@ -1,6 +1,14 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+Most notable changes to this project, should be documented in this file.
+
+## 2.7.0 -	moved clear-stuck-pods run to control-plane
+		clear_stuck_pods.sh renamed to clear-stuck-pods.sh
+
+		added custom exclusions to clear-stuck-pods.sh and set it to exclude hardware discovery pods (shouldn't matter, i think)
+		added graceful delete attempt to clear-stuck-pods.sh		
+		
+		
 ## 2.6.3 - 	fixed installer's cronjob injection, so that its a date variable
 		the previous version would make a cronjob with the install date. lol
 

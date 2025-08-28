@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# clear_stuck_pods.sh v2.7.0
+# clear-stuck-pods.sh v2.7.0
 # ---------------------------------------
 # Scans all namespaces for pods stuck in
 # Terminating, Error, or Unknown states.
