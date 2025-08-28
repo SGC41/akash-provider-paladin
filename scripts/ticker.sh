@@ -1,5 +1,5 @@
 #!/bin/bash
-#
+# 
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
@@ -14,7 +14,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-CURRENT_PALADIN_VERSION="v2.6.3"
+CURRENT_PALADIN_VERSION="v2.7.0"
 
 # Load defaults
 #source "etc/scripts/default.conf"
@@ -52,20 +52,20 @@ minute=$(date +%M)
   if [[ "$RESTARTS" -ge 3 ]]; then
     echo "RPC Rotate Triggered sent"
      echo "rpc-rotate=true" >> /host/tmp/control-plane.do
-    echo "can take up to a few minutes"
+    echo "should trigger within a  minutes on the host control-plane."
   fi
 
   # ── Run stuck pod cleanup at ── changed to 20min
   if [[ "$minute" == "00" || "$minute" == "20" || "$minute" == "40" ]]; then
     echo "Stuck Pod Cleanup Triggered at minute $minute"
-    "$SCRIPT_DIR/clear_stuck_pods.sh"
+#    "$SCRIPT_DIR/clear_stuck_pods.sh"
+    echo "clear-stuck-pods=true" >> /host/tmp/control-plane.do && \
 
     echo "check-unpaid-leases=true ; --execute" >> /host/tmp/control-plane.do && \
     echo "check for unpaid leases request sent to control-plane"
 
     echo "akash-console-prov-on-check=true" >> /host/tmp/control-plane.do && \
     echo "Akash Console Online check request sent to control-plane"
-    #"$SCRIPT_DIR/akash-console-online-check.sh"
 
 
   fi

@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.6.3
+# Akash Provider Paladin v2.7.0
 Paladin will help keep providers operational and safe.
 
 Please report bugs, should be pretty functional now.
@@ -31,6 +31,12 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.70
+     Added custom exclusion to clear-stuck-pods.sh and it will also attempt a graceful deletion, before force deleting a pod.
+     Moved the run of the aformentioned script, from ticker.sh (paladin pod)  to ticker-control-plane.sh.
+     This allows for imrpoved logging and easier customization of scripts, since they will be run on the host control-plane of paladin pod.
+     Paladin pod basically just being a cluster timer / tigger that will activate the scripts on the control-planes, when needed.
+
 - v2.6.0
      Critical fix permanent, with failover for looping withdrawal attempts on unkilled closed leases.
      Improved logging, logs will now be placed in /var/log/akash-provider-paladin/today's monthly day and any older than 23 days are deleted.
@@ -135,6 +141,17 @@ Scaling down for maintenance.
 ```
 https://akash.network/docs/providers/provider-faq-and-guide/maintenance-logs-and-troubleshooting/
 ```
+
+most if not all, non timing related logging will be accessible here.
+23 days worth of logs will be kept, change the date if you need an older one. 
+
+Note -  Logs will be created on the control-plane that hosted the paladin pod at the time of events.
+        However... the pod favors the control-plane it was installed on, and thus logs will usually be there.
+```
+nano /var/log/akash-provider-paladin/$(date +\%d)-this-month.log
+```
+
+The Paladin pod logs are nearly useless, since its only a cluster timer, to avoid split brain behavior and pod downtime.
 
 ```
 kubectl logs akash-provider-paladin-0 -n akash-services
