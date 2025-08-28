@@ -44,7 +44,7 @@ minute=$(date +%M)
   if [[ "$minute" == "00" || "$minute" == "20" || "$minute" == "40" ]]; then
     echo "[log] [event] 3 AM local time check-daily.sh for control plane activated"
      echo "check-daily=true" >> /host/tmp/control-plane.do
-     echo "rpc-rorate=true ; --check" >> /host/tmp/control-plane.do
+     echo "rpc-rotate=true ; --check" >> /host/tmp/control-plane.do
   fi
 
 
