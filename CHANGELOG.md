@@ -1,6 +1,13 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## 2.6.3 - 	fixed installer's cronjob injection, so that its a date variable
+		the previous version would make a cronjob with the install date. lol
+
+		Fixed ticker-control-plane.sh so it should log which scripts get loaded for executing from control-plane.do file.
+
+## 2.6.2 -	Critical bug fix, solved looping withdrawal attempts for closed leases.
+
 ## 2.4.1 - critical bug fix to cold wallet feature.
 
 ## [2.2.0] – 2025-06-27

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Paladin v2.3.0
-# ticker-control-plane.sh v2.2.8
+# Paladin v2.6.3
+# ticker-control-plane.sh v2.6.3
 # Creator: SGC | DCnorse
 #
 # Similiar to ticker.sh but the version that runs on the control planes.
@@ -68,13 +68,13 @@ if [[ -f "$DO_FILE" ]]; then
 #    script_name=$(echo "$script_key" | tr '-' '_' | tr '[:upper:]' '[:lower:]')
     script_name=$(echo "$script_key")
     script_path="$SCRIPTS_DIR/${script_name}.sh"
-
     # Parse up to 5 flags safely
     flags=()
     for flag in $raw_flags; do
       [[ ${#flags[@]} -lt 5 ]] && flags+=("$flag")
     done
-
+#    echo "Loaded $script_name request from control-plane.do file"
+     echo "$(log_stamp) [log] [✓] Loaded $script_name → ${flags[*]} from control-plane.do file"
     # Execute if allowed
     if [[ "$status" == "true" ]]; then
       if [[ -x "$script_path" ]]; then
@@ -82,7 +82,6 @@ if [[ -f "$DO_FILE" ]]; then
         "$script_path" "${flags[@]}"
       else
         echo "$(log_stamp) [log] [✗] Script not found or not executable: $script_path" >&2
-        exit 1
       fi
     fi
   done < "$DO_FILE"
