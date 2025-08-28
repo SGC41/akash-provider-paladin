@@ -14,7 +14,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-CURRENT_PALADIN_VERSION="v2.6.1"
+CURRENT_PALADIN_VERSION="v2.6.3"
 
 # Load defaults
 #source "etc/scripts/default.conf"
@@ -40,10 +40,12 @@ while true; do
 hour=$(date +%H)
 minute=$(date +%M)
 
+#  if [[ "$minute" == "00" || "$minute" == "20" || "$minute" == "40" ]]; then
+# debug replacement line above
   if [[ "$hour" == "03" && "$minute" == "00" ]]; then
     echo "[log] [event] 3 AM local time check-daily.sh for control plane activated"
      echo "check-daily=true" >> /host/tmp/control-plane.do
-
+     echo "rpc-rotate=true ; --check" >> /host/tmp/control-plane.do
   fi
 
 
