@@ -66,7 +66,7 @@ echo "Excluding pods: ${EXCLUDED_PODS[*]:-<none>}"
 # ── Identify stuck pods globally (kept from original) ──
 STUCK_PODS=$(
   kubectl get pods --all-namespaces |
-  grep -E 'Terminating|Error|Terminated|ContainerStatusUnknown|Unknown|NodeAffinity|Completed' |
+  grep -E 'Terminating|Error|Terminated|ContainerStatusUnknown|Unknown|NodeAffinity' |
   awk '{print $1 " " $2}'
 )
 
