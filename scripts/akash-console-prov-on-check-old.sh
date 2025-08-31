@@ -37,7 +37,6 @@ PROVIDER_YAML_FILE="$HOME/akash-provider-paladin/provider.yaml"
 # Extract wallet address from provider.yaml
 PROVIDER=$(yq -r '.from' "$PROVIDER_YAML_FILE")
 
-LAST_FIX_ATTEMPT="$PALADIN_HOME/.last_fix_akash_console_offline_issue.tmp"
 
 log_stamp() {
   echo "[$(date -u +"%Y-%m-%d %H:%M:%S")]"
@@ -61,17 +60,6 @@ else
   echo "$(log_stamp) [log] [Info] […] Trigger file not found — skipping provider action"
 fi
 
-#Akash Console Fix Wait.
-if [[ ! -f "$LAST_FIX_ATTEMPT" || "$(cut -d' ' -f3 "$LAST_FIX_ATTEMPT")" == "2_HOUR_WAIT" ]]; then
-	#checks if 2 hours have passed.
-    if [[ ! -f "$LAST_FIX_ATTEMPT" || $(( $(date +%s) - $(date -d "$(cut -d' ' -f1-2 "$LAST_FIX_ATTEMPT")" +%s) )) -ge $((105*60)) ]]; then
-      echo "105 minute wait for akash console fix reached, creating .start-provider.tmp file, so that next run will start the provider" > $HOME/akash-provider-paladin/.start-provider.tmp && \
-      echo "$NOW DAILY_DONE" > "$LAST_FIX_ATTEMPT"
-      exit 0
-    fi
-    echo "akash-console-prov-on-check.sh still in 2 hour hold, defined by .last_fix_akash_console_offline_issue.tmp"
-    exit 0
-fi
 
 # Set API endpoint
 API_ENDPOINT="https://console-api.akash.network/v1/providers/${PROVIDER}"
@@ -172,40 +160,22 @@ if [[ "$IS_ONLINE" == "false" ]]; then
   fi
 
   # ── Check time delta ───────────────────────────────────────
-  NOW=$(date -u +"%Y-%m-%d %H:%M:%S")
-  TODAY=$(cut -d' ' -f1 "$NOW")   # time only
   LAST_UNIX=$(date -d "$LAST_ONLINE_DATE" +"%s")
   NOW_UNIX=$(date +"%s")
   OFFLINE_DURATION=$((NOW_UNIX - LAST_UNIX))
-  if [[ $OFFLINE_DURATION -gt 1020 ]]; then
+  if [[ $OFFLINE_DURATION -gt 960 ]]; then
+    echo "$(log_stamp) [log] [Info][🚨] Provider has been offline > 16 minutes"
 
-    if [[ ! -f "$LAST_FIX_ATTEMPT" || "$(cut -d' ' -f1 "$LAST_FIX_ATTEMPT")" != "$TODAY" ]]; then
+    # ── Spin down provider pod ────────────────────────────────
+    # -- other stuff might try to keep it running, so have to make sure its down...
+    echo "scaling down provider"
+    kubectl -n akash-services scale statefulsets akash-provider --replicas=0
+    kubectl -n akash-services get statefulsets
+    echo "creating trigger start provider and sleeping for 16 minutes before checking again, tested 7min a few times didn't seem to work"
 
-      echo "$(log_stamp) [log] [Info][🚨] Provider has been offline > 17 minutes"
-        if [[ ! -f "$LAST_FIX_ATTEMPT" || "$(cut -d' ' -f3 "$LAST_FIX_ATTEMPT")" == "DAILY_DONE" ]]; then
-
-            echo "3 or more attempts to mitigate the akash console issue today."
-            echo "stopping for today, will retry tomorrow"
-		exit 0
-        else
-            # ── Spin down provider pod ────────────────────────────────
-            # -- other stuff might try to keep it running, so have to make sure its down...
-            echo "scaling down provider and time stamping .last_fix_akash_console_offline_issue"
-            kubectl -n akash-services scale statefulsets akash-provider --replicas=0 && echo "$NOW" > "$LAST_FIX_ATTEMPT"
-            kubectl -n akash-services get statefulsets
-            echo "creating trigger start provider and sleeping for 16 minutes before checking again, tested 7min a few times didn't seem to work"
-
-            sleep 4
-            echo "showing verification provider service has been stopped"
-            kubectl -n akash-services get statefulsets && kubectl -n akash-services get pods -l app=akash-provide
-        fi
-    else
-      echo "2 or more attempts to fix akash console offline issue today."
-      echo "leaving the provider in its current state, when two hours have passed provider will be spun down for 15 minutes."
-      echo "this should hopefully resolve the issue with akash console"
-      echo "$NOW 2_HOUR_WAIT" > "$LAST_FIX_ATTEMPT"
-      exit 0
-    fi
+    sleep 4
+    echo "showing verification provider service has been stopped"
+    kubectl -n akash-services get statefulsets && kubectl -n akash-services get pods -l app=akash-provide
 
 # disabled because 16 minutes failed
     echo "start-provider" > $HOME/akash-provider-paladin/.start-provider.tmp

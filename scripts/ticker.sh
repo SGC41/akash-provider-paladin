@@ -14,7 +14,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-CURRENT_PALADIN_VERSION="v2.7.0"
+CURRENT_PALADIN_VERSION="v2.7.1"
 
 # Load defaults
 #source "etc/scripts/default.conf"
@@ -56,7 +56,7 @@ minute=$(date +%M)
   fi
 
   # ── Run stuck pod cleanup at ── changed to 20min
-  if [[ "$minute" == "00" || "$minute" == "20" || "$minute" == "40" ]]; then
+  if [[ "$minute" == "00" || "$minute" == "15" || "$minute" == "30" || "$minute" == "45" ]]; then
     echo "Stuck Pod Cleanup Triggered at minute $minute"
 #    "$SCRIPT_DIR/clear_stuck_pods.sh"
     echo "clear-stuck-pods=true" >> /host/tmp/control-plane.do && \

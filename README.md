@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.7.0
+# Akash Provider Paladin v2.7.1
 Paladin will help keep providers operational and safe.
 
 Please report bugs, should be pretty functional now.
@@ -31,7 +31,20 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
-- v2.70
+- v2.7.1
+     Another critical fix, which should fix akash-console-prov-online-check.sh edge case... where it will stop and then restart the provider pod within a minute
+     when trying to mitigate the akash console provider offline - online issue .... undead provider, i'm considering that state coined.
+     
+     Now it will start by doing a 15-16 minutes shutdown.... if that won't fix it, it will wait 2 hours and then try again, which in my experience fixes the issue.
+     if this doesn't work, it will wait with trying again until the next day.
+
+     the issue will only happen, when paladin is trying to fix the akash console undead provider issue.
+     so is a rather niche case, but needed to be fixed, not happy with the akash-console-prov-online-check.sh script.
+
+     but this is how it will stay for now, might see if i can make it a lot better in the future...
+     is one of the earlier scripts added to paladin, and it really shows in how easy it is to make sense of.
+
+- v2.7.0
      Added custom exclusion to clear-stuck-pods.sh and it will also attempt a graceful deletion, before force deleting a pod.
      Moved the run of the aformentioned script, from ticker.sh (paladin pod)  to ticker-control-plane.sh.
      This allows for imrpoved logging and easier customization of scripts, since they will be run on the host control-plane of paladin pod.

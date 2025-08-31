@@ -1,6 +1,8 @@
 # Changelog
 
 Most notable changes to this project, should be documented in this file.
+## 2.7.1	changed ticker from 20min to 15min
+		rewritten akash-provider-online-check.sh .... should most likely also rename it.
 
 ## 2.7.0 -	moved clear-stuck-pods run to control-plane
 		clear_stuck_pods.sh renamed to clear-stuck-pods.sh
