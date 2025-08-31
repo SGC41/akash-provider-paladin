@@ -1,6 +1,7 @@
 #!/bin/bash
 #
-#  v2.2.5
+#  v2.7.0
+# reduced sleep during downtime to 5 seconds
 
 set -euo pipefail
 
@@ -20,17 +21,17 @@ fi
 cd "$DEFAULT_HOME"
 kubectl -n akash-services get statefulsets && kubectl -n akash-services scale statefulsets akash-provider --replicas=0
 
-sleep 4
+sleep 1
 echo "verifying provider service has been stopped"
 kubectl -n akash-services get statefulsets && kubectl -n akash-services get pods -l app=akash-provide
 
-sleep 4
+sleep 1
 echo "# updating"
 helm upgrade --install akash-provider akash/provider -n akash-services \
   -f "$PROVIDER_YAML" \
   --set bidpricescript="$(openssl base64 -A < "$PRICE_SCRIPT")"
 
-sleep 5
+sleep 3
 echo "Start Provider"
 kubectl -n akash-services scale statefulsets akash-provider --replicas=1
 
