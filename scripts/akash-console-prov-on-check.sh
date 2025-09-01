@@ -1,5 +1,5 @@
 #!/bin/bash
-# v2.7.0
+# v2.7.2
 # Simple Description of funtions
 #
 # changed from 1hr to 16 minutes, and will change checks from 30 to 20.
@@ -37,7 +37,7 @@ PROVIDER_YAML_FILE="$HOME/akash-provider-paladin/provider.yaml"
 # Extract wallet address from provider.yaml
 PROVIDER=$(yq -r '.from' "$PROVIDER_YAML_FILE")
 
-LAST_FIX_ATTEMPT="$PALADIN_HOME/.last_fix_akash_console_offline_issue.tmp"
+LAST_FIX_ATTEMPT="$HOME/akash-provider-paladin/.last_fix_akash_console_offline_issue.tmp"
 
 log_stamp() {
   echo "[$(date -u +"%Y-%m-%d %H:%M:%S")]"
@@ -58,19 +58,7 @@ if [[ -f "$HOME/akash-provider-paladin/.start-provider.tmp" ]]; then
   rm -f "$HOME/akash-provider-paladin/.start-provider.tmp"
   exit 0
 else
-  echo "$(log_stamp) [log] [Info] […] Trigger file not found — skipping provider action"
-fi
-
-#Akash Console Fix Wait.
-if [[ ! -f "$LAST_FIX_ATTEMPT" || "$(cut -d' ' -f3 "$LAST_FIX_ATTEMPT")" == "2_HOUR_WAIT" ]]; then
-	#checks if 2 hours have passed.
-    if [[ ! -f "$LAST_FIX_ATTEMPT" || $(( $(date +%s) - $(date -d "$(cut -d' ' -f1-2 "$LAST_FIX_ATTEMPT")" +%s) )) -ge $((105*60)) ]]; then
-      echo "105 minute wait for akash console fix reached, creating .start-provider.tmp file, so that next run will start the provider" > $HOME/akash-provider-paladin/.start-provider.tmp && \
-      echo "$NOW DAILY_DONE" > "$LAST_FIX_ATTEMPT"
-      exit 0
-    fi
-    echo "akash-console-prov-on-check.sh still in 2 hour hold, defined by .last_fix_akash_console_offline_issue.tmp"
-    exit 0
+  echo "$(log_stamp) [log] [Info] […] Trigger file not found — skipping start provider action"
 fi
 
 # Set API endpoint
@@ -107,6 +95,22 @@ API_ENDPOINT="https://console-api.akash.network/v1/providers/${PROVIDER}"
 # This part will be triggered if Console offline provider online issue is suspected.
 if [[ "$IS_ONLINE" == "false" ]]; then
   echo "$(log_stamp) [log] [Info][⚠] Akash Console reports provider as offline"
+
+
+      #Akash Console Fix Wait.
+      if [[ ! -f "$LAST_FIX_ATTEMPT" || "$(cut -d' ' -f3 "$LAST_FIX_ATTEMPT")" == "2_HOUR_WAIT" ]]; then
+	#checks if 2 hours have passed.
+          if [[ ! -f "$LAST_FIX_ATTEMPT" || $(( $(date +%s) - $(date -d "$(cut -d' ' -f1-2 "$LAST_FIX_ATTEMPT")" +%s) )) -ge $((105*60)) ]]; then
+            echo "105 minute wait for akash console fix reached, creating .start-provider.tmp file, so that next run will start the provider" > $HOME/akash-provider-paladin/.start-provider.tmp && \
+            echo "$NOW DAILY_DONE" > "$LAST_FIX_ATTEMPT"
+            exit 0
+          fi
+          echo "akash-console-prov-on-check.sh still in 2 hour hold, defined by .last_fix_akash_console_offline_issue.tmp"
+
+          exit 0
+
+      fi
+
 
   # ── Fetch provider host_uri from blockchain ────────────────
   NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o jsonpath='{.subsets[0].addresses[0].ip}')
@@ -239,5 +243,6 @@ if [[ "$IS_ONLINE" == "false" ]]; then
   fi
 else
   echo "$(log_stamp) [log] [Info][✓] Provider is online — no action needed"
+  rm -f "$LAST_FIX_ATTEMPT"
 fi
 
