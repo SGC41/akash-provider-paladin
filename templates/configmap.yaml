@@ -8,7 +8,7 @@ metadata:
   labels:
     app: {{ include "akash-provider-paladin.name" . | quote }}
 data:
-{{- range $path, $file := .Files.Glob "scripts/*.sh" }}
+{{- range $path, $file := .Files.Glob "scripts/*" }}
   {{ base $path }}: |
 {{ $file | toString | indent 4 }}
 {{- end }}
