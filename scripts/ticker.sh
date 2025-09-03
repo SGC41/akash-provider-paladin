@@ -30,7 +30,9 @@ while true; do
   POD="akash-provider-0"
   if kubectl -n akash-services get pod "$POD" &>/dev/null; then
     RESTARTS=$(kubectl -n akash-services get pod "$POD" -o jsonpath='{.status.containerStatuses[0].restartCount}')
-    echo "Restarts: $RESTARTS"
+    HOSTNODE=$(kubectl -n akash-services get pod akash-provider-0 -o jsonpath='{.spec.nodeName}')
+    echo "Host:     $HOSTNODE"
+    echo "Restarts: $RESTARTS" 
   else
   echo "[⚠] Pod $POD not found — skipping restart check"
   RESTARTS=0

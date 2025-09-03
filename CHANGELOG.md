@@ -1,6 +1,9 @@
 # Changelog
 
 Most notable changes to this project, should be documented in this file.
+##v2.7.4
+  		Added Host provider node to paladin pod logs.
+
 ## 2.7.1	changed ticker from 20min to 15min
 		rewritten akash-provider-online-check.sh .... should most likely also rename it.
 
