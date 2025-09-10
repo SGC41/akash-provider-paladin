@@ -1,5 +1,5 @@
 #!/bin/bash
-# v2.8.3
+# v2.8.0
 # Simple Description of funtions
 #
 # changed from 1hr to 16 minutes, and will change checks from 30 to 20.
@@ -100,22 +100,25 @@ if [[ "$IS_ONLINE" == "false" ]]; then
       #Akash Console Fix Wait.
       if [[ ! -f "$LAST_FIX_ATTEMPT" || "$(cut -d' ' -f3 "$LAST_FIX_ATTEMPT")" == "2_HOUR_WAIT" ]]; then
 	#checks if 2 hours have passed.
-          if [[ ! -f "$LAST_FIX_ATTEMPT" || $(( $(date +%s) - $(date -d "$(cut -d' ' -f1-2 "$LAST_FIX_ATTEMPT")" +%s) )) -ge $((105*60)) ]]; then
-            echo "60 minute wait for akash console fix reached, creating .start-provider.tmp file, so that next run will start the provider, will take a bit longer, like 30 to 60 minutes... code needs improvements time codes." > $HOME/akash-provider-paladin/.start-provider.tmp && \
+          if [[ ! -f "$LAST_FIX_ATTEMPT" || $(( $(date +%s) - $(date -d "$(cut -d' ' -f1-2 "$LAST_FIX_ATTEMPT")" +%s) )) -ge $((60*60)) ]]; then
+            echo "105 minute wait for akash console fix reached, creating .start-provider.tmp file, so that next run will start the provider" > $HOME/akash-provider-paladin/.start-provider.tmp && \
             echo "$NOW DAILY_DONE" > "$LAST_FIX_ATTEMPT"
             exit 0
           fi
-          echo "akash-console-prov-on-check.sh still in 1 hour hold, which really takes like 2 hours, defined by .last_fix_akash_console_offline_issue.tm...  needs improvementsp the timing is not strict... should run by time codes rather than just code block cycles, future update maybe"
-
-          exit 0
+          echo "akash-console-prov-on-check.sh still in 2 hour hold, defined by .last_fix_akash_console_offline_issue.tmp"
+          echo "sorry logging should be better here... but code needs work"
+          echo "should atleast show provider api state"
+          #exit 0
 
       fi
 
-  # find  working RPC node
+
+
+ # find  working RPC node
   #  update provider.yaml from etcd, so its valid
   # grab rpc node from provider.yaml
   # if local make replace domain name with ip
-  #  $HOME/akash-provider-paladin/
+  $HOME/akash-provider-paladin/update-local-provider-yaml.sh
 
   RPC_NODE_ACTIVE=$(yq -r '.node // "https://rpc-akash.ecostake.com:443"' "$PROVIDER_YAML_FILE")
 
@@ -128,15 +131,11 @@ if [[ "$IS_ONLINE" == "false" ]]; then
   fi
 
 
-  #RPC_NODE_ACTIVE=$(yq -r '.node // "https://rpc-akash.ecostake.com:443"' "$PROVIDER_YAML_FILE")
-  #if RPC_NODE_ACTIVE == "http://akash-node-1:26657" then 
-  #
-  ## ── Fetch provider host_uri from blockchain ────────────────
-  #NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o jsonpath='{.subsets[0].addresses[0].ip}')
-  #BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "http://${NODE_IP}:26657" | jq -r '.host_uri')
-  #else
-  #BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "$RPC_NODE_ACTIVE" | jq -r '.host_uri')
-  #fi
+
+#  # ── Fetch provider host_uri from blockchain ────────────────
+#  NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o jsonpath='{.subsets[0].addresses[0].ip}')
+#  BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "http://${NODE_IP}:26657" | jq -r '.host_uri')
+
   # ── Sanitize URL (strip protocol) ──────────────────────────
   # old  BLOCKCHAIN_DOMAIN=$(echo "$BLOCKCHAIN_PROVIDER_URL" | sed -E 's|^https?://||')
 
@@ -198,11 +197,12 @@ if [[ "$IS_ONLINE" == "false" ]]; then
 
   # ── Check time delta ───────────────────────────────────────
   NOW=$(date -u +"%Y-%m-%d %H:%M:%S")
-  TODAY=$(cut -d' ' -f1 "$NOW")   # time only
+  #TODAY=$(cut -d' ' -f1 "$NOW")   # time only
+  TODAY=$(cut -d' ' -f1 <<< "$NOW")
   LAST_UNIX=$(date -d "$LAST_ONLINE_DATE" +"%s")
   NOW_UNIX=$(date +"%s")
   OFFLINE_DURATION=$((NOW_UNIX - LAST_UNIX))
-  if [[ $OFFLINE_DURATION -gt 1020 ]]; then
+  if [[ $OFFLINE_DURATION -gt 1260 ]]; then
 
     if [[ ! -f "$LAST_FIX_ATTEMPT" || "$(cut -d' ' -f1 "$LAST_FIX_ATTEMPT")" != "$TODAY" ]]; then
 
@@ -225,40 +225,20 @@ if [[ "$IS_ONLINE" == "false" ]]; then
             kubectl -n akash-services get statefulsets && kubectl -n akash-services get pods -l app=akash-provide
         fi
     else
-      echo "2 or more attempts to fix akash console offline issue today."
-      echo "leaving the provider in its current state, when about two hours have passed provider will be spun down for about 15 minutes."
-      echo "this should hopefully resolve the issue with akash console."
-      echo "$NOW 2_HOUR_WAIT" > "$LAST_FIX_ATTEMPT"
-      exit 0
+      if [[ ! -f "$LAST_FIX_ATTEMPT" || "$(cut -d' ' -f3 "$LAST_FIX_ATTEMPT")" == "2_HOUR_WAIT" ]]; then
+        echo "Continuing 2 hour wait from $LAST_FIX_ATTEMPT UTC"
+        exit 0
+      else
+        echo "2 or more attempts to fix akash console offline issue today."
+        echo "leaving the provider in its current state, when two hours have passed provider will be spun down for 15 minutes."
+        echo "this should hopefully resolve the issue with akash console"
+        echo "$NOW 2_HOUR_WAIT" > "$LAST_FIX_ATTEMPT"
+        exit 0
+      fi
     fi
 
 # disabled because 16 minutes failed
     echo "start-provider" > $HOME/akash-provider-paladin/.start-provider.tmp
-#    sleep 960 && kubectl -n akash-services scale statefulsets akash-provider --replicas=1 && rm $HOME/akash-provider-paladin/.start-provider.tmp && \
-#   echo "showing verification provider service is still stopped after sleep and then starting" && \
-#    kubectl -n akash-services get statefulsets && kubectl -n akash-services get pods -l app=akash-provide && \
-#    echo "provider akash console online state should hopefully now be recovered"
-
-#    sleep 15
-#    echo "step to verify it's been started."
-#    kubectl -n akash-services get statefulsets && kubectl -n akash-services get pods -l app=akash-provide
-
-#    echo "insert secondary check here... or loop or add as function"
-# ?? i don't think so    echo "$(log_stamp) [log] [Event] Akash Console Provider online issue detected, provider spun down until next Paladin check."
-
-    # ── Register note in etcd memory store ─────────────────── not working
-    #ISSUE_KEY="AKASH-CONSOLE-OFFLINE-ISSUE"
-    #EXISTING=$(kubectl -n akash-services get configmap akash-provider-paladin-memory -o jsonpath="{.data.$ISSUE_KEY}" || echo "")
-
-
-    #if [[ "$EXISTING" != "true" ]]; then
-    #  kubectl -n akash-services patch configmap akash-provider-paladin-memory \
-    #    --type merge \
-    #    -p "{\"data\": {\"$ISSUE_KEY\": \"true\"}}"
-    #  echo "$(log_stamp) [log] [Info][✓] Memory note registered for: $ISSUE_KEY"
-    #else
-    #  echo "$(log_stamp) [log] [Info][ℹ] Note already set: $ISSUE_KEY"
-    #fi
   else
     echo "$(log_stamp) [log] [Info][⏱] Offline duration is under 15 minutes — holding"
   fi

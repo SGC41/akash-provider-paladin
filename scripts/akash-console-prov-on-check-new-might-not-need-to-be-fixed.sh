@@ -1,5 +1,5 @@
 #!/bin/bash
-# v2.8.3
+# v2.8.0
 # Simple Description of funtions
 #
 # changed from 1hr to 16 minutes, and will change checks from 30 to 20.
@@ -52,6 +52,31 @@ if ! [[ "$PROVIDER" =~ ^akash ]]; then
 fi
 
 #Look for untrigger scale up provider command.
+
+if [[ -f "$HOME/akash-provider-paladin/.flip-provider-state.tmp" ]]; then
+    echo "$(log_stamp) [log] [Info] [✓] Trigger file found — changing provider state"
+
+
+      PROVIDER_URL="https://provider.example.com:8443"  # change to your provider's API URL
+      API_STATUS=$(curl -s "$PROVIDER_URL/status" | jq -r '.status')
+
+      if [[ "$API_STATUS" == "ready" ]]; then
+          echo "$(log_stamp) [log] [Info] Provider API says it's ON — scaling down"
+          kubectl -n akash-services scale statefulset akash-provider --replicas=0
+      else
+          echo "$(log_stamp) [log] [Info] Provider API says it's OFF — scaling up"
+          kubectl -n akash-services scale statefulset akash-provider --replicas=1
+      fi
+
+    kubectl scale statefulsets akash-provider --replicas=1 -n akash-services
+    rm -f "$HOME/akash-provider-paladin/.flip-provider-state.tmp"
+    exit 0
+else
+   echo "$(log_stamp) [log] [Info] […] Trigger file not found — skipping flip provider state action"
+fi
+
+
+
 if [[ -f "$HOME/akash-provider-paladin/.start-provider.tmp" ]]; then
   echo "$(log_stamp) [log] [Info] [✓] Trigger file found — starting provider action"
   kubectl scale statefulsets akash-provider --replicas=1 -n akash-services
@@ -101,21 +126,24 @@ if [[ "$IS_ONLINE" == "false" ]]; then
       if [[ ! -f "$LAST_FIX_ATTEMPT" || "$(cut -d' ' -f3 "$LAST_FIX_ATTEMPT")" == "2_HOUR_WAIT" ]]; then
 	#checks if 2 hours have passed.
           if [[ ! -f "$LAST_FIX_ATTEMPT" || $(( $(date +%s) - $(date -d "$(cut -d' ' -f1-2 "$LAST_FIX_ATTEMPT")" +%s) )) -ge $((105*60)) ]]; then
-            echo "60 minute wait for akash console fix reached, creating .start-provider.tmp file, so that next run will start the provider, will take a bit longer, like 30 to 60 minutes... code needs improvements time codes." > $HOME/akash-provider-paladin/.start-provider.tmp && \
+            echo "105 minute wait for akash console fix reached, creating .flip-provider-state.tmp file, so that next run will start the provider" > $HOME/akash-provider-paladin/.flip-provider-state.tmp && \
             echo "$NOW DAILY_DONE" > "$LAST_FIX_ATTEMPT"
             exit 0
           fi
-          echo "akash-console-prov-on-check.sh still in 1 hour hold, which really takes like 2 hours, defined by .last_fix_akash_console_offline_issue.tm...  needs improvementsp the timing is not strict... should run by time codes rather than just code block cycles, future update maybe"
-
-          exit 0
+          echo "akash-console-prov-on-check.sh still in 2 hour hold, defined by .last_fix_akash_console_offline_issue.tmp"
+          echo "sorry logging should be better here... but code needs work"
+          echo "should atleast show provider api state"
+          #exit 0
 
       fi
 
-  # find  working RPC node
+
+
+ # find  working RPC node
   #  update provider.yaml from etcd, so its valid
   # grab rpc node from provider.yaml
   # if local make replace domain name with ip
-  #  $HOME/akash-provider-paladin/
+  $HOME/akash-provider-paladin/update-local-provider-yaml.sh
 
   RPC_NODE_ACTIVE=$(yq -r '.node // "https://rpc-akash.ecostake.com:443"' "$PROVIDER_YAML_FILE")
 
@@ -128,15 +156,11 @@ if [[ "$IS_ONLINE" == "false" ]]; then
   fi
 
 
-  #RPC_NODE_ACTIVE=$(yq -r '.node // "https://rpc-akash.ecostake.com:443"' "$PROVIDER_YAML_FILE")
-  #if RPC_NODE_ACTIVE == "http://akash-node-1:26657" then 
-  #
-  ## ── Fetch provider host_uri from blockchain ────────────────
-  #NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o jsonpath='{.subsets[0].addresses[0].ip}')
-  #BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "http://${NODE_IP}:26657" | jq -r '.host_uri')
-  #else
-  #BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "$RPC_NODE_ACTIVE" | jq -r '.host_uri')
-  #fi
+
+#  # ── Fetch provider host_uri from blockchain ────────────────
+#  NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o jsonpath='{.subsets[0].addresses[0].ip}')
+#  BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "http://${NODE_IP}:26657" | jq -r '.host_uri')
+
   # ── Sanitize URL (strip protocol) ──────────────────────────
   # old  BLOCKCHAIN_DOMAIN=$(echo "$BLOCKCHAIN_PROVIDER_URL" | sed -E 's|^https?://||')
 
@@ -198,7 +222,8 @@ if [[ "$IS_ONLINE" == "false" ]]; then
 
   # ── Check time delta ───────────────────────────────────────
   NOW=$(date -u +"%Y-%m-%d %H:%M:%S")
-  TODAY=$(cut -d' ' -f1 "$NOW")   # time only
+  #TODAY=$(cut -d' ' -f1 "$NOW")   # time only
+  TODAY=$(cut -d' ' -f1 <<< "$NOW")
   LAST_UNIX=$(date -d "$LAST_ONLINE_DATE" +"%s")
   NOW_UNIX=$(date +"%s")
   OFFLINE_DURATION=$((NOW_UNIX - LAST_UNIX))
@@ -225,11 +250,16 @@ if [[ "$IS_ONLINE" == "false" ]]; then
             kubectl -n akash-services get statefulsets && kubectl -n akash-services get pods -l app=akash-provide
         fi
     else
-      echo "2 or more attempts to fix akash console offline issue today."
-      echo "leaving the provider in its current state, when about two hours have passed provider will be spun down for about 15 minutes."
-      echo "this should hopefully resolve the issue with akash console."
-      echo "$NOW 2_HOUR_WAIT" > "$LAST_FIX_ATTEMPT"
-      exit 0
+      if [[ ! -f "$LAST_FIX_ATTEMPT" || "$(cut -d' ' -f3 "$LAST_FIX_ATTEMPT")" == "2_HOUR_WAIT" ]]; then
+        echo "Continuing 2 hour wait from $LAST_FIX_ATTEMPT UTC"
+        exit 0
+      else
+        echo "2 or more attempts to fix akash console offline issue today."
+        echo "leaving the provider in its current state, when two hours have passed provider will be spun down for 15 minutes."
+        echo "this should hopefully resolve the issue with akash console"
+        echo "$NOW 2_HOUR_WAIT" > "$LAST_FIX_ATTEMPT"
+        exit 0
+      fi
     fi
 
 # disabled because 16 minutes failed

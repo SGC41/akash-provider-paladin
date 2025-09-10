@@ -1,6 +1,13 @@
 # Changelog
 
 Most notable changes to this project, should be documented in this file.
+## v2.8.2	bug fix in akash-provider-console
+
+## v2.8.1	Reduced downtime during akash console issue recovery to 1 hour, because of various 15 min check cycles on top, its a lot slower to get around to actually deciding to switch anyways
+		so should still take around 2 ish hours, just not 3 or 4 like it did before.
+
+
+
 ## v2.8.0       Changed ticker.sh to reduce provider pod restart detection delay.
 
 ## 2.7.5	Changed rpc-rorate, so that the --check flag will work repeatedly, instead of just run the local rpc check once pr day.
