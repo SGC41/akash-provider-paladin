@@ -1,6 +1,10 @@
 # Changelog
 
 Most notable changes to this project, should be documented in this file.
+## v2.8.0       Changed ticker.sh to reduce provider pod restart detection delay.
+
+## 2.7.5	Changed rpc-rorate, so that the --check flag will work repeatedly, instead of just run the local rpc check once pr day.
+
 ##v2.7.4
   		Added Host provider node to paladin pod logs.
 

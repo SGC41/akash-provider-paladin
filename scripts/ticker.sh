@@ -1,5 +1,6 @@
 #!/bin/bash
 # 
+# v 2.8.0
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
@@ -31,8 +32,9 @@ while true; do
   if kubectl -n akash-services get pod "$POD" &>/dev/null; then
     RESTARTS=$(kubectl -n akash-services get pod "$POD" -o jsonpath='{.status.containerStatuses[0].restartCount}')
     HOSTNODE=$(kubectl -n akash-services get pod akash-provider-0 -o jsonpath='{.spec.nodeName}')
+    echo "Restarts: $RESTARTS"
     echo "Host:     $HOSTNODE"
-    echo "Restarts: $RESTARTS" 
+    echo ""
   else
   echo "[⚠] Pod $POD not found — skipping restart check"
   RESTARTS=0
@@ -69,20 +71,56 @@ minute=$(date +%M)
     echo "akash-console-prov-on-check=true" >> /host/tmp/control-plane.do && \
     echo "Akash Console Online check request sent to control-plane"
 
+    echo "check-provider-liveness=true" >> /host/tmp/control-plane.do && \
+    echo "Provider pod liveness check request sent to control-plane"
 
   fi
 
-  # ── Wait until next 5-minute boundary ──
-  # added Akash Console Uptime check
-  now=$(date +%s)
-  next_min=$(( ( (minute / 5 + 1) * 5 ) % 60 ))
-  if [[ "$next_min" -eq 0 ]]; then
-    target=$(date -d "$(date +%Y-%m-%d) $(date +%H):00:00 next hour" +%s)
-  else
-    target=$(date -d "$(date +%Y-%m-%d\ %H):$next_min:00" +%s)
-  fi
+# ── Wait until next 5‑minute boundary, but watch for restarts ──
+POD="akash-provider-0"
+NS="akash-services"
 
-  waitTime=$(( target - now ))
-  echo "Sleeping for $waitTime seconds until next run at $(date -d @$target)"
+# Calculate seconds until next 5‑minute mark
+now=$(date +%s)
+minute=$(date +%M)
+next_min=$(( ( (minute / 5 + 1) * 5 ) % 60 ))
+if [[ "$next_min" -eq 0 ]]; then
+  target=$(date -d "$(date +%Y-%m-%d) $(date +%H):00:00 next hour" +%s)
+else
+  target=$(date -d "$(date +%Y-%m-%d\ %H):$next_min:00" +%s)
+fi
+waitTime=$(( target - now ))
+
+if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
+  current_restarts=$(kubectl -n "$NS" get pod "$POD" \
+    -o jsonpath='{.status.containerStatuses[0].restartCount}')
+  echo "Watching $POD for up to $waitTime seconds (current restarts: $current_restarts)..."
+
+  timeout "$waitTime" kubectl get pod "$POD" -n "$NS" \
+    -o jsonpath='{.status.containerStatuses[0].restartCount}{"\n"}' -w |
+  while read new_restarts; do
+    if [[ "$new_restarts" != "$current_restarts" ]]; then
+      echo "[watch] Restart detected at $(date) — breaking early"
+      break
+    fi
+  done
+else
+  echo "[⚠] Pod $POD not found — sleeping $waitTime seconds"
   sleep "$waitTime"
-done
+fi
+
+
+#  # ── Wait until next 5-minute boundary ──
+#  # added Akash Console Uptime check
+#  now=$(date +%s)
+#  next_min=$(( ( (minute / 5 + 1) * 5 ) % 60 ))
+#  if [[ "$next_min" -eq 0 ]]; then
+#    target=$(date -d "$(date +%Y-%m-%d) $(date +%H):00:00 next hour" +%s)
+#  else
+#    target=$(date -d "$(date +%Y-%m-%d\ %H):$next_min:00" +%s)
+#  fi
+
+#  waitTime=$(( target - now ))
+#  echo "Sleeping for $waitTime seconds until next run at $(date -d @$target)"
+#  sleep "$waitTime"
+#done

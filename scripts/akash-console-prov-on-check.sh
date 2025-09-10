@@ -111,11 +111,32 @@ if [[ "$IS_ONLINE" == "false" ]]; then
 
       fi
 
+  # find  working RPC node
+  #  update provider.yaml from etcd, so its valid
+  # grab rpc node from provider.yaml
+  # if local make replace domain name with ip
+  $HOME/akash-provider-paladin/
 
-  # ── Fetch provider host_uri from blockchain ────────────────
-  NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o jsonpath='{.subsets[0].addresses[0].ip}')
-  BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "http://${NODE_IP}:26657" | jq -r '.host_uri')
+  RPC_NODE_ACTIVE=$(yq -r '.node // "https://rpc-akash.ecostake.com:443"' "$PROVIDER_YAML_FILE")
 
+  if [[ "$RPC_NODE_ACTIVE" == "http://akash-node-1:26657" ]]; then
+    # ── Fetch provider host_uri from blockchain ────────────────
+    NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o jsonpath='{.subsets[0].addresses[0].ip}')
+    BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "http://${NODE_IP}:26657" | jq -r '.host_uri')
+  else
+    BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "$RPC_NODE_ACTIVE" | jq -r '.host_uri')
+  fi
+
+
+  #RPC_NODE_ACTIVE=$(yq -r '.node // "https://rpc-akash.ecostake.com:443"' "$PROVIDER_YAML_FILE")
+  #if RPC_NODE_ACTIVE == "http://akash-node-1:26657" then 
+  #
+  ## ── Fetch provider host_uri from blockchain ────────────────
+  #NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o jsonpath='{.subsets[0].addresses[0].ip}')
+  #BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "http://${NODE_IP}:26657" | jq -r '.host_uri')
+  #else
+  #BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "$RPC_NODE_ACTIVE" | jq -r '.host_uri')
+  #fi
   # ── Sanitize URL (strip protocol) ──────────────────────────
   # old  BLOCKCHAIN_DOMAIN=$(echo "$BLOCKCHAIN_PROVIDER_URL" | sed -E 's|^https?://||')
 
