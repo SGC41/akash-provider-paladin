@@ -1,6 +1,6 @@
 #!/bin/bash
 # 
-# v 2.8.0
+# v 2.8.1
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
@@ -76,7 +76,7 @@ minute=$(date +%M)
 
   fi
 
-# ── Wait until next 5‑minute boundary, but watch for restarts ──
+# ── Wait until next 5minute boundary, but watch for restarts ──
 POD="akash-provider-0"
 NS="akash-services"
 
@@ -123,4 +123,4 @@ fi
 #  waitTime=$(( target - now ))
 #  echo "Sleeping for $waitTime seconds until next run at $(date -d @$target)"
 #  sleep "$waitTime"
-#done
+done
