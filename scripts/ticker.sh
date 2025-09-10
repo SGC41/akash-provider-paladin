@@ -1,6 +1,6 @@
 #!/bin/bash
 # 
-# v 2.8.1
+# v 2.8.2
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
@@ -76,11 +76,11 @@ minute=$(date +%M)
 
   fi
 
-# ── Wait until next 5minute boundary, but watch for restarts ──
+# ── Wait until next 5 minute boundary, but watch for restarts ──
 POD="akash-provider-0"
 NS="akash-services"
 
-# Calculate seconds until next 5‑minute mark
+# Calculate seconds until next 5 minute mark
 now=$(date +%s)
 minute=$(date +%M)
 next_min=$(( ( (minute / 5 + 1) * 5 ) % 60 ))
@@ -96,31 +96,35 @@ if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
     -o jsonpath='{.status.containerStatuses[0].restartCount}')
   echo "Watching $POD for up to $waitTime seconds (current restarts: $current_restarts)..."
 
+  # Run the watch and capture exit status
   timeout "$waitTime" kubectl get pod "$POD" -n "$NS" \
     -o jsonpath='{.status.containerStatuses[0].restartCount}{"\n"}' -w |
   while read new_restarts; do
     if [[ "$new_restarts" != "$current_restarts" ]]; then
       echo "[watch] Restart detected at $(date) — breaking early"
+      pkill -P $$ kubectl   # kill the kubectl watch process in this pipeline
       break
     fi
   done
+
+  watch_status=${PIPESTATUS[0]}  # exit code from 'timeout/kubectl'
+
+  case $watch_status in
+    0)
+      echo "[watch] Watch ended normally (timeout reached)"
+      ;;
+    124)
+      echo "[watch] Watch timed out after $waitTime seconds (no restarts)"
+      ;;
+    *)
+      echo "[⚠] Watch ended due to kubectl error (exit code: $watch_status)"
+      ;;
+  esac
+
 else
   echo "[⚠] Pod $POD not found — sleeping $waitTime seconds"
   sleep "$waitTime"
 fi
+# end of  5 min block
 
-
-#  # ── Wait until next 5-minute boundary ──
-#  # added Akash Console Uptime check
-#  now=$(date +%s)
-#  next_min=$(( ( (minute / 5 + 1) * 5 ) % 60 ))
-#  if [[ "$next_min" -eq 0 ]]; then
-#    target=$(date -d "$(date +%Y-%m-%d) $(date +%H):00:00 next hour" +%s)
-#  else
-#    target=$(date -d "$(date +%Y-%m-%d\ %H):$next_min:00" +%s)
-#  fi
-
-#  waitTime=$(( target - now ))
-#  echo "Sleeping for $waitTime seconds until next run at $(date -d @$target)"
-#  sleep "$waitTime"
 done
