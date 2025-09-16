@@ -53,7 +53,7 @@ spec:
           args:
             - |
               set -euo pipefail
-              echo "Akash Provider Paladin v2.5.0"
+              echo "Akash Paladin Pod Initiated"
               # apt won't work not sure how best to solve it
               # since it's not needed, I've left it as is...
 

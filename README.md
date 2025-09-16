@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.7.1
+# Akash Provider Paladin v2.8.4
 Paladin will help keep providers operational and safe.
 
 Please report bugs, should be pretty functional now.
@@ -31,6 +31,19 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.8.4
+    Added --version flag to up update-provider-yaml.sh
+    so that the provider doesn't break when updating via helm.
+
+- V2.8.3 
+     Various quanity of life improvements.
+
+- v2.8.0
+     Changed ticker.sh to reduce provider pod restart detection delay, should hopefully be immediately now, rather than delayed.
+
+- v2.7.4
+     Added Host provider node to paladin pod logs.
+
 - v2.7.1
      Another critical fix, which should fix akash-console-prov-online-check.sh edge case... where it will stop and then restart the provider pod within a minute
      when trying to mitigate the akash console provider offline - online issue .... undead provider, i'm considering that state coined.

@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.6.3
+# v2.7.3
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 TARGET_DIR="$HOME/akash-provider-paladin"
@@ -68,7 +68,7 @@ echo "📌 Working directory: $(pwd)"
 
 
 #Load configurations - had to come after repo clone.
-source default.conf
+source $HOME/akash-provider-paladin/scripts/default.conf
 
 
 # Dynamically select etcd certs based on node shortname

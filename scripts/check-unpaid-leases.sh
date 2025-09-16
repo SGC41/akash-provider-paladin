@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Paladin v2.6.0
+# Paladin v2.8.0
 # check-unpaid-leases.sh v1.1.0
 # creator SGC | DCnorse
 # 2025-08-26
@@ -66,6 +66,13 @@ file="$HOME/akash-provider-paladin/.withdrawn.tmp"
 [ -f "$file" ] && find "$file" -type f -mmin +2880 -exec rm {} \;
 # Ensure it always exists afterward
 touch "$file"
+
+
+
+log_stamp() {
+  echo "[$(date -u +"%Y-%m-%d %H:%M:%S")]"
+}
+
 
 
 #checking for provider.yaml, if not then download it from ETCD

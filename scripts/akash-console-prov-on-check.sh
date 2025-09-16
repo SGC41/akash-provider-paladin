@@ -1,5 +1,5 @@
 #!/bin/bash
-# v2.7.2
+# v2.8.3
 # Simple Description of funtions
 #
 # changed from 1hr to 16 minutes, and will change checks from 30 to 20.
@@ -101,21 +101,42 @@ if [[ "$IS_ONLINE" == "false" ]]; then
       if [[ ! -f "$LAST_FIX_ATTEMPT" || "$(cut -d' ' -f3 "$LAST_FIX_ATTEMPT")" == "2_HOUR_WAIT" ]]; then
 	#checks if 2 hours have passed.
           if [[ ! -f "$LAST_FIX_ATTEMPT" || $(( $(date +%s) - $(date -d "$(cut -d' ' -f1-2 "$LAST_FIX_ATTEMPT")" +%s) )) -ge $((105*60)) ]]; then
-            echo "105 minute wait for akash console fix reached, creating .start-provider.tmp file, so that next run will start the provider" > $HOME/akash-provider-paladin/.start-provider.tmp && \
+            echo "60 minute wait for akash console fix reached, creating .start-provider.tmp file, so that next run will start the provider, will take a bit longer, like 30 to 60 minutes... code needs improvements time codes." > $HOME/akash-provider-paladin/.start-provider.tmp && \
             echo "$NOW DAILY_DONE" > "$LAST_FIX_ATTEMPT"
             exit 0
           fi
-          echo "akash-console-prov-on-check.sh still in 2 hour hold, defined by .last_fix_akash_console_offline_issue.tmp"
+          echo "akash-console-prov-on-check.sh still in 1 hour hold, which really takes like 2 hours, defined by .last_fix_akash_console_offline_issue.tm...  needs improvementsp the timing is not strict... should run by time codes rather than just code block cycles, future update maybe"
 
           exit 0
 
       fi
 
+  # find  working RPC node
+  #  update provider.yaml from etcd, so its valid
+  # grab rpc node from provider.yaml
+  # if local make replace domain name with ip
+  #  $HOME/akash-provider-paladin/
 
-  # ── Fetch provider host_uri from blockchain ────────────────
-  NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o jsonpath='{.subsets[0].addresses[0].ip}')
-  BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "http://${NODE_IP}:26657" | jq -r '.host_uri')
+  RPC_NODE_ACTIVE=$(yq -r '.node // "https://rpc-akash.ecostake.com:443"' "$PROVIDER_YAML_FILE")
 
+  if [[ "$RPC_NODE_ACTIVE" == "http://akash-node-1:26657" ]]; then
+    # ── Fetch provider host_uri from blockchain ────────────────
+    NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o jsonpath='{.subsets[0].addresses[0].ip}')
+    BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "http://${NODE_IP}:26657" | jq -r '.host_uri')
+  else
+    BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "$RPC_NODE_ACTIVE" | jq -r '.host_uri')
+  fi
+
+
+  #RPC_NODE_ACTIVE=$(yq -r '.node // "https://rpc-akash.ecostake.com:443"' "$PROVIDER_YAML_FILE")
+  #if RPC_NODE_ACTIVE == "http://akash-node-1:26657" then 
+  #
+  ## ── Fetch provider host_uri from blockchain ────────────────
+  #NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o jsonpath='{.subsets[0].addresses[0].ip}')
+  #BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "http://${NODE_IP}:26657" | jq -r '.host_uri')
+  #else
+  #BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "$RPC_NODE_ACTIVE" | jq -r '.host_uri')
+  #fi
   # ── Sanitize URL (strip protocol) ──────────────────────────
   # old  BLOCKCHAIN_DOMAIN=$(echo "$BLOCKCHAIN_PROVIDER_URL" | sed -E 's|^https?://||')
 
@@ -205,8 +226,8 @@ if [[ "$IS_ONLINE" == "false" ]]; then
         fi
     else
       echo "2 or more attempts to fix akash console offline issue today."
-      echo "leaving the provider in its current state, when two hours have passed provider will be spun down for 15 minutes."
-      echo "this should hopefully resolve the issue with akash console"
+      echo "leaving the provider in its current state, when about two hours have passed provider will be spun down for about 15 minutes."
+      echo "this should hopefully resolve the issue with akash console."
       echo "$NOW 2_HOUR_WAIT" > "$LAST_FIX_ATTEMPT"
       exit 0
     fi

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# rpc-rotate.sh v2.5.1
+# rpc-rotate.sh v2.7.5
 set -uo pipefail
 export ETCDCTL_API=3
 
@@ -42,7 +42,7 @@ PALADIN_HOME="${1:-$HOME/akash-provider-paladin}"
 CFG="$PALADIN_HOME/provider.yaml"
 PRICE="$PALADIN_HOME/price_script_generic.sh"
 SCRIPTS="$PALADIN_HOME/scripts"
-STATE="$PALADIN_HOME/.last_rpc_rotate"
+STATE="$PALADIN_HOME/.last_rpc_rotate.tmp"
 TODAY=$(date +%F)
 MIN_HOURS=3
 
@@ -85,7 +85,7 @@ fi
 
 
 if $LOCAL_MODE; then
-  rm -f "$PALADIN_HOME/.last_rpc_rotate"
+  rm -f "$PALADIN_HOME/.last_rpc_rotate.tmp"
 fi
 
 # ── Sync provider.yaml & price_script from etcd ────────────
@@ -166,7 +166,9 @@ rotate_rpc() {
         break
       }
     done
-    echo "$TODAY" > "$STATE"
+      if ! $CHECK_ONLY; then
+        echo "$TODAY" > "$STATE"
+      fi
   fi
 
   for ((offset=1; offset<=${#entries[@]}; offset++)); do
@@ -226,7 +228,11 @@ annotate_provider_yaml
 
 if [[ ! -f "$STATE" || "$(cat "$STATE")" != "$TODAY" ]]; then
   echo "$(log_stamp)[rpc] First run today → prefer local"
-  FORCE_LOCAL=1 rotate_rpc && echo "$TODAY" > "$STATE" && exit 0
+  FORCE_LOCAL=1 rotate_rpc
+  if ! $CHECK_ONLY; then
+     echo "$TODAY" > "$STATE"
+  fi
+  exit 0
   echo "$(log_stamp)[rpc] Rotation attempt failed on first run"
 else
   echo "$(log_stamp)[rpc] Subsequent run → rotating"

@@ -37,7 +37,11 @@ CONFIG="$HOME/akash-provider-paladin/provider.yaml"
 log_stamp() {
   echo "[$(date -u +"%Y-%m-%d %H:%M:%S")]"
 }
-
+echo "########################################################"
+echo 
+echo "$(log_stamp) -  Paladin scheduled execution" 
+echo 
+echo "########################################################"
 #Update check
 if [[ -f "$DO_UPDATE_FILE" || ! -f "$UPDATE_DONE_FILE" ]]; then
   echo "$(log_stamp) [log] 📨  Updated since last execution or new control plane, running /install/prereq-intall.sh"

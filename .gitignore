@@ -39,7 +39,12 @@ withdraw-list.sh
 .vscode/
 *.sublime-project
 *.sublime-workspace
+*.tmp
+*.done
 
 # Ignore Git itself
 .gitignore
 .gitmodules
+
+#ignore custom scripts
+custom/

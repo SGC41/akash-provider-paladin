@@ -1,5 +1,6 @@
 #!/bin/bash
 # 
+# v 2.8.2
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
@@ -14,10 +15,10 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-CURRENT_PALADIN_VERSION="v2.7.1"
+CURRENT_PALADIN_VERSION="v2.7.x"
 
 # Load defaults
-#source "etc/scripts/default.conf"
+source "/etc/scripts/default.conf"
 
 while true; do
   echo "============================"
@@ -30,7 +31,10 @@ while true; do
   POD="akash-provider-0"
   if kubectl -n akash-services get pod "$POD" &>/dev/null; then
     RESTARTS=$(kubectl -n akash-services get pod "$POD" -o jsonpath='{.status.containerStatuses[0].restartCount}')
+    HOSTNODE=$(kubectl -n akash-services get pod akash-provider-0 -o jsonpath='{.spec.nodeName}')
     echo "Restarts: $RESTARTS"
+    echo "Host:     $HOSTNODE"
+    echo ""
   else
   echo "[⚠] Pod $POD not found — skipping restart check"
   RESTARTS=0
@@ -55,7 +59,7 @@ minute=$(date +%M)
     echo "should trigger within a  minutes on the host control-plane."
   fi
 
-  # ── Run stuck pod cleanup at ── changed to 20min
+  # ── Run stuck pod cleanup at ── 
   if [[ "$minute" == "00" || "$minute" == "15" || "$minute" == "30" || "$minute" == "45" ]]; then
     echo "Stuck Pod Cleanup Triggered at minute $minute"
 #    "$SCRIPT_DIR/clear_stuck_pods.sh"
@@ -67,20 +71,60 @@ minute=$(date +%M)
     echo "akash-console-prov-on-check=true" >> /host/tmp/control-plane.do && \
     echo "Akash Console Online check request sent to control-plane"
 
+    echo "check-provider-liveness=true" >> /host/tmp/control-plane.do && \
+    echo "Provider pod liveness check request sent to control-plane"
 
   fi
 
-  # ── Wait until next 5-minute boundary ──
-  # added Akash Console Uptime check
-  now=$(date +%s)
-  next_min=$(( ( (minute / 5 + 1) * 5 ) % 60 ))
-  if [[ "$next_min" -eq 0 ]]; then
-    target=$(date -d "$(date +%Y-%m-%d) $(date +%H):00:00 next hour" +%s)
-  else
-    target=$(date -d "$(date +%Y-%m-%d\ %H):$next_min:00" +%s)
-  fi
+# ── Wait until next 5 minute boundary, but watch for restarts ──
+POD="akash-provider-0"
+NS="akash-services"
 
-  waitTime=$(( target - now ))
-  echo "Sleeping for $waitTime seconds until next run at $(date -d @$target)"
+# Calculate seconds until next 5 minute mark
+now=$(date +%s)
+minute=$(date +%M)
+next_min=$(( ( (minute / 5 + 1) * 5 ) % 60 ))
+if [[ "$next_min" -eq 0 ]]; then
+  target=$(date -d "$(date +%Y-%m-%d) $(date +%H):00:00 next hour" +%s)
+else
+  target=$(date -d "$(date +%Y-%m-%d\ %H):$next_min:00" +%s)
+fi
+waitTime=$(( target - now ))
+
+if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
+  current_restarts=$(kubectl -n "$NS" get pod "$POD" \
+    -o jsonpath='{.status.containerStatuses[0].restartCount}')
+  echo "Watching $POD for up to $waitTime seconds (current restarts: $current_restarts)..."
+
+  # Run the watch and capture exit status
+  timeout "$waitTime" kubectl get pod "$POD" -n "$NS" \
+    -o jsonpath='{.status.containerStatuses[0].restartCount}{"\n"}' -w |
+  while read new_restarts; do
+    if [[ "$new_restarts" != "$current_restarts" ]]; then
+      echo "[watch] Restart detected at $(date) — breaking early"
+      pkill -P $$ kubectl   # kill the kubectl watch process in this pipeline
+      break
+    fi
+  done
+
+  watch_status=${PIPESTATUS[0]}  # exit code from 'timeout/kubectl'
+
+  case $watch_status in
+    0)
+      echo "[watch] Watch ended normally (timeout reached)"
+      ;;
+    124)
+      echo "[watch] Watch timed out after $waitTime seconds (no restarts)"
+      ;;
+    *)
+      echo "[⚠] Watch ended due to kubectl error (exit code: $watch_status)"
+      ;;
+  esac
+
+else
+  echo "[⚠] Pod $POD not found — sleeping $waitTime seconds"
   sleep "$waitTime"
+fi
+# end of  5 min block
+
 done
