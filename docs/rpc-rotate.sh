@@ -23,7 +23,7 @@ This script automates the selection and activation of a healthy Akash RPC node b
 | `provider.yaml`                      | Lists all available RPCs     |
 | `price_script_generic.sh`           | Sourced and synced post-rotation |
 | `update-provider-configuration.sh`  | Helm redeployment script     |
-| `.last_rpc_rotate`                  | Timestamp of last rotation   |
+| `.last_rpc_rotate.tmp`                  | Timestamp of last rotation   |
 | `rpc-rotate.sh`                     | Main rotation logic          |
 
 ---
@@ -104,7 +104,7 @@ If local node is unreachable, it gracefully skips to external nodes.
 ### 🛠️ Maintenance Tips
 
 - To re-trigger local preference:  
-  Delete `.last_rpc_rotate`
+  Delete `.last_rpc_rotate.tmp`
 
 - To update min chain age requirement:  
   Change `MIN_HOURS` near top of script

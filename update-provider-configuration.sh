@@ -28,6 +28,7 @@ kubectl -n akash-services get statefulsets && kubectl -n akash-services get pods
 sleep 1
 echo "# updating"
 helm upgrade --install akash-provider akash/provider -n akash-services \
+  --version 11.6.4 \
   -f "$PROVIDER_YAML" \
   --set bidpricescript="$(openssl base64 -A < "$PRICE_SCRIPT")"
 

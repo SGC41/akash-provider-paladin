@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.8.3
+# Akash Provider Paladin v2.8.4
 Paladin will help keep providers operational and safe.
 
 Please report bugs, should be pretty functional now.
@@ -31,6 +31,10 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.8.4
+    Added --version flag to up update-provider-yaml.sh
+    so that the provider doesn't break when updating via helm.
+
 - V2.8.3 
      Various quanity of life improvements.
 

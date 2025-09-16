@@ -42,7 +42,7 @@ PALADIN_HOME="${1:-$HOME/akash-provider-paladin}"
 CFG="$PALADIN_HOME/provider.yaml"
 PRICE="$PALADIN_HOME/price_script_generic.sh"
 SCRIPTS="$PALADIN_HOME/scripts"
-STATE="$PALADIN_HOME/.last_rpc_rotate"
+STATE="$PALADIN_HOME/.last_rpc_rotate.tmp"
 TODAY=$(date +%F)
 MIN_HOURS=3
 
@@ -85,7 +85,7 @@ fi
 
 
 if $LOCAL_MODE; then
-  rm -f "$PALADIN_HOME/.last_rpc_rotate"
+  rm -f "$PALADIN_HOME/.last_rpc_rotate.tmp"
 fi
 
 # ── Sync provider.yaml & price_script from etcd ────────────

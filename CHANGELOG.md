@@ -1,6 +1,8 @@
 # Changelog
 
 Most notable changes to this project, should be documented in this file.
+## v2.8.4 	added --version 11.6.4 to helm upgrade in update-provider-yaml.sh
+
 ## v2.8.2	bug fix in akash-provider-console
 
 ## v2.8.1	Reduced downtime during akash console issue recovery to 1 hour, because of various 15 min check cycles on top, its a lot slower to get around to actually deciding to switch anyways
