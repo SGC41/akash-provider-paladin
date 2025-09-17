@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# v 2.8.6
+# v 2.8.7
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
@@ -110,7 +110,6 @@ if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
       --field-selector involvedObject.name="$POD" \
       --sort-by=.lastTimestamp | tail -n 3
 
-    continue
   fi
 else
   echo "[⚠] Pod $POD not found — sleeping $waitTime seconds"
