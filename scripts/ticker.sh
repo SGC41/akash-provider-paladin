@@ -1,6 +1,6 @@
 #!/bin/bash
 # 
-# v 2.8.2
+# v 2.8.5
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
@@ -96,18 +96,15 @@ if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
     -o jsonpath='{.status.containerStatuses[0].restartCount}')
   echo "Watching $POD for up to $waitTime seconds (current restarts: $current_restarts)..."
 
-  # Run the watch and capture exit status
-  timeout "$waitTime" kubectl get pod "$POD" -n "$NS" \
-    -o jsonpath='{.status.containerStatuses[0].restartCount}{"\n"}' -w |
-  while read new_restarts; do
-    if [[ "$new_restarts" != "$current_restarts" ]]; then
-      echo "[watch] Restart detected at $(date) — breaking early"
-      pkill -P $$ kubectl   # kill the kubectl watch process in this pipeline
-      break
-    fi
-  done
+  new_restarts=$(timeout "$waitTime" kubectl get pod "$POD" -n "$NS" \
+    -o jsonpath='{.status.containerStatuses[0].restartCount}{"\n"}' -w | grep -m1 .)
 
   watch_status=${PIPESTATUS[0]}  # exit code from 'timeout/kubectl'
+
+  if [[ "$new_restarts" != "$current_restarts" ]]; then
+    echo "[watch] Restart detected at $(date) — breaking early"
+    continue
+  fi
 
   case $watch_status in
     0)

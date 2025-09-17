@@ -1,6 +1,10 @@
 # Changelog
 
 Most notable changes to this project, should be documented in this file.
+## v2.8.5
+		Bug fix, making the 2.8.0 - Reduced Provider Pod restart detection feature actually immediate.
+		minor ticker.sh code change
+
 ## v2.8.4 	added --version 11.6.4 to helm upgrade in update-provider-yaml.sh
 
 ## v2.8.2	bug fix in akash-provider-console
