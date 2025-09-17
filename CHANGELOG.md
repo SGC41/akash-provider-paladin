@@ -1,6 +1,11 @@
 # Changelog
 
 Most notable changes to this project, should be documented in this file.
+## v2.8.6
+		Changed logging by ticker.sh during early break in sleep.
+		Now shows reasons for provider pod restarts.
+		Error code check replaced with kubectl event logs for provider pod.
+
 ## v2.8.5
 		Bug fix, making the 2.8.0 - Reduced Provider Pod restart detection feature actually immediate.
 		minor ticker.sh code change

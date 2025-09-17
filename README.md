@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.8.5
+# Akash Provider Paladin v2.8.6
 Paladin will help keep providers operational and safe.
 
 Please report bugs, should be pretty functional now.
@@ -31,6 +31,10 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.8.6
+     Changed logging by ticker.sh during early break in sleep.
+     Now shows reasons for provider pod restarts.
+
 - v2.8.5
      Bug fix, making the 2.8.0 - Reduced Provider Pod restart detection feature actually immediate.
 

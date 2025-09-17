@@ -1,6 +1,6 @@
 #!/bin/bash
-# 
-# v 2.8.5
+#
+# v 2.8.6
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
@@ -8,14 +8,14 @@
 # Monitors provider restarts and triggers RPC rotation.
 # Additionally runs stuck pod cleanup exactly on 00 and 30 minute marks.
 # now 00, 20 and 40
-# 
+#
 
 
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-CURRENT_PALADIN_VERSION="v2.7.x"
+CURRENT_PALADIN_VERSION="v2.8.x"
 
 # Load defaults
 source "/etc/scripts/default.conf"
@@ -103,25 +103,16 @@ if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
 
   if [[ "$new_restarts" != "$current_restarts" ]]; then
     echo "[watch] Restart detected at $(date) — breaking early"
+
+    # Get the last 2–3 events for this pod
+    echo "[watch] Recent Kubernetes events for $POD:"
+    kubectl -n "$NS" get events \
+      --field-selector involvedObject.name="$POD" \
+      --sort-by=.lastTimestamp | tail -n 3
+
     continue
   fi
 
-  case $watch_status in
-    0)
-      echo "[watch] Watch ended normally (timeout reached)"
-      ;;
-    124)
-      echo "[watch] Watch timed out after $waitTime seconds (no restarts)"
-      ;;
-    *)
-      echo "[⚠] Watch ended due to kubectl error (exit code: $watch_status)"
-      ;;
-  esac
-
-else
-  echo "[⚠] Pod $POD not found — sleeping $waitTime seconds"
-  sleep "$waitTime"
-fi
 # end of  5 min block
 
 done
