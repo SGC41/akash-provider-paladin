@@ -112,7 +112,10 @@ if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
 
     continue
   fi
-
+else
+  echo "[⚠] Pod $POD not found — sleeping $waitTime seconds"
+  sleep "$waitTime"
+fi
 # end of  5 min block
 
 done
