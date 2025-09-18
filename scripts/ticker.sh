@@ -92,9 +92,6 @@ fi
 waitTime=$(( target - now ))
 
 if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
-  current_restarts=$(kubectl -n "$NS" get pod "$POD" \
-    -o jsonpath='{.status.containerStatuses[0].restartCount}')
-  echo "Watching $POD for up to $waitTime seconds (current restarts: $current_restarts)..."
 
   # Get the current restart count
   current_restarts=$(kubectl -n "$NS" get pod "$POD" \
