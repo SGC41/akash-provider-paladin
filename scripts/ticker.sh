@@ -110,7 +110,7 @@ if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
           # Get the last 2–3 events for this pod
           echo "[watch] Recent Kubernetes events for $POD:"
           kubectl -n "$NS" get events \
-            --field-selector involvedObject.name="$POD" \
+            --field-selector involvedObject.name="akash-provider-0" \
             --sort-by=.lastTimestamp | tail -n 3
           break
       fi
