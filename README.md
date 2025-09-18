@@ -31,6 +31,9 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.8.8
+     feature from 2.8.0 last fix hopefully.
+
 - v2.8.6
      Changed logging by ticker.sh during early break in sleep.
      Now shows reasons for provider pod restarts.

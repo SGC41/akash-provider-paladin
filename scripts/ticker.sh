@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# v 2.8.7
+# v 2.8.8
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
@@ -96,21 +96,29 @@ if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
     -o jsonpath='{.status.containerStatuses[0].restartCount}')
   echo "Watching $POD for up to $waitTime seconds (current restarts: $current_restarts)..."
 
-  new_restarts=$(timeout "$waitTime" kubectl get pod "$POD" -n "$NS" \
-    -o jsonpath='{.status.containerStatuses[0].restartCount}{"\n"}' -w | grep -m1 .)
+  # Get the current restart count
+  current_restarts=$(kubectl -n "$NS" get pod "$POD" \
+    -o jsonpath='{.status.containerStatuses[0].restartCount}')
 
-  watch_status=${PIPESTATUS[0]}  # exit code from 'timeout/kubectl'
+  echo "Watching $POD for up to $waitTime seconds (current restarts: $current_restarts)..."
 
-  if [[ "$new_restarts" != "$current_restarts" ]]; then
-    echo "[watch] Restart detected at $(date) — breaking early"
+  # Watch for changes and break early if restart count changes
+  timeout "$waitTime" kubectl get pod "$POD" -n "$NS" \
+    -o jsonpath='{.status.containerStatuses[0].restartCount}{"\n"}' -w |
+  while read -r new_restarts; do
+      if [[ "$new_restarts" != "$current_restarts" ]]; then
+          echo "[watch] Restart detected at $(date) — breaking early"
+          pkill -P $$ kubectl   # kill the kubectl watch process in this pipeline
 
-    # Get the last 2–3 events for this pod
-    echo "[watch] Recent Kubernetes events for $POD:"
-    kubectl -n "$NS" get events \
-      --field-selector involvedObject.name="$POD" \
-      --sort-by=.lastTimestamp | tail -n 3
+          # Get the last 2–3 events for this pod
+          echo "[watch] Recent Kubernetes events for $POD:"
+          kubectl -n "$NS" get events \
+            --field-selector involvedObject.name="$POD" \
+            --sort-by=.lastTimestamp | tail -n 3
+          break
+      fi
+  done
 
-  fi
 else
   echo "[⚠] Pod $POD not found — sleeping $waitTime seconds"
   sleep "$waitTime"
