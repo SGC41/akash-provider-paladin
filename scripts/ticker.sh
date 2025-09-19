@@ -128,7 +128,7 @@ if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
           kubectl -n "$NS" get events \
             --field-selector involvedObject.name="$POD" \
             --sort-by=.lastTimestamp | tail -n 6
-          break 2
+          break
       fi
   done < <(
       timeout "$waitTime" kubectl get pod "$POD" -n "$NS" \
