@@ -1,13 +1,12 @@
 #!/bin/bash
 #
-# v 2.8.8
+# v 2.8.9
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
 
 # Monitors provider restarts and triggers RPC rotation.
-# Additionally runs stuck pod cleanup exactly on 00 and 30 minute marks.
-# now 00, 20 and 40
+# Additionally runs stuck pod cleanup exactly on 00, 15, 30 and 45 marks
 #
 
 
@@ -20,23 +19,31 @@ CURRENT_PALADIN_VERSION="v2.8.x"
 # Load defaults
 source "/etc/scripts/default.conf"
 
-while true; do
+
+log_stamp() {
+  echo "[$(date -u +"%Y-%m-%d %H:%M:%S")]"
+}
+
+
   echo "============================"
   echo "Script cycle started at: $(date)"
   echo $CURRENT_PALADIN_VERSION 
   echo "============================"
 
 
-  echo "Checking Provider Pod restarts"
+while true; do
+
+
+  echo "$(log_stamp) [log] - Checking Provider Pod restarts"
   POD="akash-provider-0"
   if kubectl -n akash-services get pod "$POD" &>/dev/null; then
     RESTARTS=$(kubectl -n akash-services get pod "$POD" -o jsonpath='{.status.containerStatuses[0].restartCount}')
     HOSTNODE=$(kubectl -n akash-services get pod akash-provider-0 -o jsonpath='{.spec.nodeName}')
-    echo "Restarts: $RESTARTS"
-    echo "Host:     $HOSTNODE"
+    echo "$(log_stamp) [log] - Restarts: $RESTARTS"
+    echo "$(log_stamp) [log] - Host:     $HOSTNODE"
     echo ""
   else
-  echo "[⚠] Pod $POD not found — skipping restart check"
+  echo "$(log_stamp) [log] [⚠] Pod $POD not found — skipping restart check"
   RESTARTS=0
   fi
 
@@ -47,32 +54,32 @@ minute=$(date +%M)
 #  if [[ "$minute" == "00" || "$minute" == "20" || "$minute" == "40" ]]; then
 # debug replacement line above
   if [[ "$hour" == "03" && "$minute" == "00" ]]; then
-    echo "[log] [event] 3 AM local time check-daily.sh for control plane activated"
+    echo "$(log_stamp) [log] - [event] 3 AM local time check-daily.sh for control plane activated"
      echo "check-daily=true" >> /host/tmp/control-plane.do
      echo "rpc-rotate=true ; --check" >> /host/tmp/control-plane.do
   fi
 
 
   if [[ "$RESTARTS" -ge 3 ]]; then
-    echo "RPC Rotate Triggered sent"
+    echo "$(log_stamp) [log] [event] - RPC Rotate Triggered sent"
      echo "rpc-rotate=true" >> /host/tmp/control-plane.do
-    echo "should trigger within a  minutes on the host control-plane."
+    echo "$(log_stamp) [log] - should trigger within a  minutes on the host control-plane."
   fi
 
   # ── Run stuck pod cleanup at ── 
   if [[ "$minute" == "00" || "$minute" == "15" || "$minute" == "30" || "$minute" == "45" ]]; then
-    echo "Stuck Pod Cleanup Triggered at minute $minute"
+    echo "$(log_stamp) [log] - Stuck Pod Cleanup Triggered at minute $minute"
 #    "$SCRIPT_DIR/clear_stuck_pods.sh"
     echo "clear-stuck-pods=true" >> /host/tmp/control-plane.do && \
 
     echo "check-unpaid-leases=true ; --execute" >> /host/tmp/control-plane.do && \
-    echo "check for unpaid leases request sent to control-plane"
+    echo "$(log_stamp) [log] - check for unpaid leases request sent to control-plane"
 
     echo "akash-console-prov-on-check=true" >> /host/tmp/control-plane.do && \
-    echo "Akash Console Online check request sent to control-plane"
+    echo "$(log_stamp) [log] - Akash Console Online check request sent to control-plane"
 
     echo "check-provider-liveness=true" >> /host/tmp/control-plane.do && \
-    echo "Provider pod liveness check request sent to control-plane"
+    echo "$(log_stamp) [log] - Provider pod liveness check request sent to control-plane"
 
   fi
 
@@ -97,27 +104,27 @@ if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
   current_restarts=$(kubectl -n "$NS" get pod "$POD" \
     -o jsonpath='{.status.containerStatuses[0].restartCount}')
 
-  echo "Watching $POD for up to $waitTime seconds (current restarts: $current_restarts)..."
+  echo "$(log_stamp) [log] - Watching $POD for up to $waitTime seconds (current restarts: $current_restarts)..."
 
   # Watch for changes and break early if restart count changes
   timeout "$waitTime" kubectl get pod "$POD" -n "$NS" \
     -o jsonpath='{.status.containerStatuses[0].restartCount}{"\n"}' -w |
   while read -r new_restarts; do
       if [[ "$new_restarts" != "$current_restarts" ]]; then
-          echo "[watch] Restart detected at $(date) — breaking early"
+          echo "$(log_stamp) [log] - [watch] Restart detected at $(date) — breaking early"
           pkill -P $$ kubectl   # kill the kubectl watch process in this pipeline
 
           # Get the last 2–3 events for this pod
-          echo "[watch] Recent Kubernetes events for $POD:"
+          echo "$(log_stamp) [log] - [watch] Recent Kubernetes events for $POD:"
           kubectl -n "$NS" get events \
             --field-selector involvedObject.name="akash-provider-0" \
-            --sort-by=.lastTimestamp | tail -n 3
-          break
+            --sort-by=.lastTimestamp | tail -n 6
+          break 2
       fi
   done
 
 else
-  echo "[⚠] Pod $POD not found — sleeping $waitTime seconds"
+  echo "$(log_stamp) [log] - [⚠] Pod $POD not found — sleeping $waitTime seconds"
   sleep "$waitTime"
 fi
 # end of  5 min block
