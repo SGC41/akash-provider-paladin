@@ -103,22 +103,6 @@ if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
 
   echo "$(log_stamp) [log] - Watching $POD for up to $waitTime seconds (current restarts: $current_restarts)..."
 
-#  # Watch for changes and break early if restart count changes
-#  timeout "$waitTime" kubectl get pod "$POD" -n "$NS" \
-#    -o jsonpath='{.status.containerStatuses[0].restartCount}{"\n"}' -w |
-#  while read -r new_restarts; do
-#      if [[ "$new_restarts" != "$current_restarts" ]]; then
-#          echo "$(log_stamp) [log] - [watch] Restart detected at $(date) — breaking early"
-#          pkill -P $$ kubectl   # kill the kubectl watch process in this pipeline
-
-#          # Get the last 2–3 events for this pod
-#          echo "$(log_stamp) [log] - [watch] Recent Kubernetes events for $POD:"
-#          kubectl -n "$NS" get events \
-#            --field-selector involvedObject.name="akash-provider-0" \
-#            --sort-by=.lastTimestamp | tail -n 6
-#          break 2
-#      fi
-#  done
   while read -r new_restarts; do
       if [[ "$new_restarts" != "$current_restarts" ]]; then
           echo "$(log_stamp) [log] - [watch] Restart detected at $(date) — breaking early"
@@ -127,7 +111,7 @@ if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
           # Get the last 2–3 events for this pod
           kubectl -n "$NS" get events \
             --field-selector involvedObject.name="$POD" \
-            --sort-by=.lastTimestamp | tail -n 6
+            --sort-by=.lastTimestamp | tail -n 10 | grep -v '^[[:space:]]*$'
           break
       fi
   done < <(
