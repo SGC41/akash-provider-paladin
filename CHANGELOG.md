@@ -1,6 +1,10 @@
 # Changelog
 
 Most notable changes to this project, should be documented in this file.
+## v2.9.0	
+		Lots of changes, mainly ticker.sh, added new check script in scripts folder.
+		update-provider-configuration.sh also changed, added so it will update the current-provider-rpc.tmp file.
+
 ## v2.8.6
 		Changed logging by ticker.sh during early break in sleep.
 		Now shows reasons for provider pod restarts.

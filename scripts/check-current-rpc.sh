@@ -1,5 +1,12 @@
+#!/usr/bin/env bash
+# v2.9.0
 
-echo "checking rpc node"
+log_stamp() {
+  echo "[$(date -u +"%Y-%m-%d %H:%M:%S")]"
+}
+
+
+echo "$(log_stamp) [log] - checking akash-provider-rpc.conf - paladin rpc memory"
  RAW=$(kubectl exec -n akash-services akash-provider-0 -c provider -- \
             printenv AKASH_NODE_1_PORT_26657_TCP 2>/dev/null)
 
@@ -22,10 +29,10 @@ echo "checking rpc node"
           rpc_node_url="${SCHEME}://${HOST}:${PORT}"
 stored_rpc_node_url="blank"
 [ -f /host/tmp/akash-provider-rpc.conf ] && stored_rpc_node_url=$(< /host/tmp/akash-provider-rpc.conf)
-if [["$stored_rpc_node_url" !=  "$rpc_node_url" ]]; then
-          echo "paladin tmp stored rpc not same as current, updating tmp/akash-provider-rpc.conf"
+if [[ "$stored_rpc_node_url" != "$rpc_node_url" ]]; then
+          echo "$(log_stamp) [log] - paladin tmp stored rpc not same as current, updating tmp/akash-provider-rpc.conf"
           echo "$rpc_node_url" > /tmp/akash-provider-rpc.conf
 else
-echo "akash-provider-rpc.conf verified"
+echo "$(log_stamp) [log] - akash-provider-rpc.conf verified"
 fi
 
