@@ -30,6 +30,17 @@ log_stamp() {
   echo $CURRENT_PALADIN_VERSION 
   echo "============================"
 
+check_rpc() {
+  local status="${1%/}/status" resp catch t0 now
+  resp=$(curl -s --max-time 5 "$status") || return 1
+  [[ -z $resp ]] && return 1
+  catch=$(jq -r .result.sync_info.catching_up <<<"$resp")
+  [[ $catch != "false" ]] && return 1
+  t0=$(jq -r .result.sync_info.earliest_block_time <<<"$resp")
+  t0=$(date -d "$t0" +%s); now=$(date +%s)
+  echo $(( (now - t0) / 3600 ))
+}
+
 
 while true; do
   echo "$(log_stamp) [log] - Checking Provider Pod restarts"
@@ -78,8 +89,10 @@ minute=$(date +%M)
       if [[ "$CURRENT_PALADIN_VERSION" != "$LATEST_VERSION" ]]; then
         lower=$(printf "%s\n%s\n" "$CURRENT_PALADIN_VERSION" "$LATEST_VERSION" | sort -V | head -n1)
         if [[ "$lower" == "$CURRENT_PALADIN_VERSION" ]]; then
+          echo "###########################################"
           echo "$(log_stamp) [log] - [update] A new version of paladin is available: $LATEST_VERSION (you have $CURRENT_PALADIN_VERSION)"
           echo "$(log_stamp) [log] - [update] Install with curl -fsSLo /tmp/install.sh https://raw.githubusercontent.com/SGC41/akash-provider-paladin/stable/install.sh && bash /tmp/install.sh"
+          echo "###########################################"
         fi
       fi
     fi
@@ -150,6 +163,37 @@ if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
           kubectl -n "$NS" get events \
             --field-selector involvedObject.name="$POD" \
             --sort-by=.lastTimestamp | tail -n 10 | grep -v '^[[:space:]]*$'
+
+          # Check if RPC node is working
+          echo "Verifying RPC node is working"
+          RAW=$(kubectl exec -n akash-services akash-provider-0 -c provider -- \
+            printenv AKASH_NODE_1_PORT_26657_TCP 2>/dev/null)
+
+          if [[ -z "$RAW" ]]; then
+            echo "No AKASH_NODE_1_PORT_26657_TCP found"
+            exit 1
+          fi
+
+          HOST=$(echo "$RAW" | sed -E 's#^tcp://([^:]+):([0-9]+)$#\1#')
+          PORT=$(echo "$RAW" | sed -E 's#^tcp://([^:]+):([0-9]+)$#\2#')
+
+          if [[ "$PORT" == "26657" ]]; then
+            SCHEME="http"
+          elif [[ "$PORT" == "440" ]]; then
+            SCHEME="https"
+          else
+            SCHEME="https"
+          fi
+
+          probe_url="${SCHEME}://${HOST}:${PORT}"
+          echo "$probe_url"
+
+          hrs=$(check_rpc "$probe_url") || {
+            echo "[rpc] $probe_url failed health check — sending RPC rotate"
+            grep -q '^rpc-rotate=true' /host/tmp/control-plane.do || echo "rpc-rotate=true" >> /host/tmp/control-plane.do
+          }
+
+          echo "[rpc] checked $probe_url RPC node Synced for (${hrs}h)"
           break
       fi
   done < <(
