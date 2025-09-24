@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# v 2.8.10
+# v 2.9.0
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
@@ -14,11 +14,10 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-CURRENT_PALADIN_VERSION="v2.8.x"
+CURRENT_PALADIN_VERSION="v2.9.x"
 
 # Load defaults
-source "/etc/scripts/default.conf"
-
+source "$HOME/akash-provider-paladin/scripts/default.conf"
 
 log_stamp() {
   echo "[$(date -u +"%Y-%m-%d %H:%M:%S")]"
@@ -47,6 +46,38 @@ while true; do
 # ── Trigger CHECK_ONLY flag at exactly 3:00 AM ──
 hour=$(date +%H)
 minute=$(date +%M)
+
+#Paladin Version check
+  if [[ "$minute" == "00" ]]; then
+
+  # ── Ensure we have a local clone of the repo ──
+    REPO_DIR="/tmp/akash-provider-paladin"
+    if [[ ! -d "$REPO_DIR/.git" ]]; then
+      git clone --quiet https://github.com/SGC41/akash-provider-paladin.git "$REPO_DIR"
+    else
+      git -C "$REPO_DIR" fetch --quiet --tags origin
+      git -C "$REPO_DIR" fetch --quiet origin "$BRANCH"
+    fi
+
+  # ── Checkout branch from config ──
+    git -C "$REPO_DIR" checkout --quiet "$BRANCH"
+
+  # ── Get the latest tag reachable from that branch ──
+    LATEST_VERSION=$(git -C "$REPO_DIR" describe --tags --abbrev=0 | sed 's/^v//')
+
+
+  # ── Compare versions ──
+    if [[ -n "$CURRENT_PALADIN_VERSION" && -n "$LATEST_VERSION" ]]; then
+      if [[ "$CURRENT_PALADIN_VERSION" != "$LATEST_VERSION" ]]; then
+        lower=$(printf "%s\n%s\n" "$CURRENT_PALADIN_VERSION" "$LATEST_VERSION" | sort -V | head -n1)
+        if [[ "$lower" == "$CURRENT_PALADIN_VERSION" ]]; then
+          echo "$(log_stamp) [log] - [update] A new version of paladin is available: $LATEST_VERSION (you have $CURRENT_PALADIN_VERSION)"
+          echo "$(log_stamp) [log] - [update] Install with curl -fsSLo /tmp/install.sh https://raw.githubusercontent.com/SGC41/akash-provider-paladin/stable/install.sh && bash /tmp/install.sh"
+        fi
+      fi
+    fi
+  fi
+#version check done
 
 #  if [[ "$minute" == "00" || "$minute" == "20" || "$minute" == "40" ]]; then
 # debug replacement line above
