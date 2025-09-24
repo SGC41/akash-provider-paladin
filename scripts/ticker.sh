@@ -15,9 +15,10 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 CURRENT_PALADIN_VERSION="v2.9.x"
+BRANCH="stable"
 
 # Load defaults
-source "$HOME/akash-provider-paladin/scripts/default.conf"
+source "$SCRIPT_DIR/default.conf"
 
 log_stamp() {
   echo "[$(date -u +"%Y-%m-%d %H:%M:%S")]"
@@ -50,23 +51,29 @@ minute=$(date +%M)
 #Paladin Version check
   if [[ "$minute" == "00" ]]; then
 
+
+    # If no version is found in default.conf, skip comparison
+    if [[ -z "${CURRENT_PALADIN_VERSION:-}" ]]; then
+    echo "$(log_stamp) [log] - [skip] No version found in default.conf (expected CURRENT_PALADIN_VERSION, PALADIN_VERSION, or VERSION)"
+
+    fi
+
   # ── Ensure we have a local clone of the repo ──
     REPO_DIR="/tmp/akash-provider-paladin"
     if [[ ! -d "$REPO_DIR/.git" ]]; then
       git clone --quiet https://github.com/SGC41/akash-provider-paladin.git "$REPO_DIR"
-    else
-      git -C "$REPO_DIR" fetch --quiet --tags origin
-      git -C "$REPO_DIR" fetch --quiet origin "$BRANCH"
     fi
 
-  # ── Checkout branch from config ──
+  # ── Fetch and reset to the branch from config ──
+    git -C "$REPO_DIR" fetch --quiet origin "$BRANCH" --tags
     git -C "$REPO_DIR" checkout --quiet "$BRANCH"
+    git -C "$REPO_DIR" reset --hard "origin/$BRANCH" --quiet
 
   # ── Get the latest tag reachable from that branch ──
-    LATEST_VERSION=$(git -C "$REPO_DIR" describe --tags --abbrev=0 | sed 's/^v//')
+      LATEST_VERSION=$(git -C "$REPO_DIR" describe --tags --abbrev=0 | sed 's/^v//')
 
 
-  # ── Compare versions ──
+    # ── Compare versions ──
     if [[ -n "$CURRENT_PALADIN_VERSION" && -n "$LATEST_VERSION" ]]; then
       if [[ "$CURRENT_PALADIN_VERSION" != "$LATEST_VERSION" ]]; then
         lower=$(printf "%s\n%s\n" "$CURRENT_PALADIN_VERSION" "$LATEST_VERSION" | sort -V | head -n1)
