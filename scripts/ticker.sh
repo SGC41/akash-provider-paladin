@@ -30,6 +30,7 @@ log_stamp() {
   echo $CURRENT_PALADIN_VERSION 
   echo "============================"
 
+echo "$(log_stamp) [log] - check for paladin akash rpc node stored file request sent to control-plane"
 echo "check-current-rpc=true" >> /host/tmp/control-plane.do
 
 check_rpc() {
