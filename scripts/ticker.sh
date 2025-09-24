@@ -30,6 +30,8 @@ log_stamp() {
   echo $CURRENT_PALADIN_VERSION 
   echo "============================"
 
+echo "check-current-rpc=true" >> /host/tmp/control-plane.do
+
 check_rpc() {
   local status="${1%/}/status" resp catch t0 now
   resp=$(curl -s --max-time 5 "$status") || return 1
