@@ -91,13 +91,13 @@ minute=$(date +%M)
   if [[ "$hour" == "03" && "$minute" == "00" ]]; then
     echo "$(log_stamp) [log] - [event] 3 AM local time check-daily.sh for control plane activated"
      echo "check-daily=true" >> /host/tmp/control-plane.do
-     echo "rpc-rotate=true ; --check" >> /host/tmp/control-plane.do
+     grep -q '^rpc-rotate=true' /host/tmp/control-plane.do || echo "rpc-rotate=true ; --check" >> /host/tmp/control-plane.do
   fi
 
 
   if [[ "$RESTARTS" -ge 3 ]]; then
     echo "$(log_stamp) [log] [event] - RPC Rotate Triggered sent"
-     echo "rpc-rotate=true" >> /host/tmp/control-plane.do
+    grep -q '^rpc-rotate=true' /host/tmp/control-plane.do || echo "rpc-rotate=true" >> /host/tmp/control-plane.do
     echo "$(log_stamp) [log] - should trigger within a  minutes on the host control-plane."
   fi
 
