@@ -92,13 +92,13 @@ minute=$(date +%M)
   if [[ "$hour" == "03" && "$minute" == "00" ]]; then
     echo "$(log_stamp) [log] - [event] 3 AM local time check-daily.sh for control plane activated"
      echo "check-daily=true" >> /host/tmp/control-plane.do
-     grep -q '^rpc-rotate=true' /host/tmp/control-plane.do || echo "rpc-rotate=true ; --check" >> /host/tmp/control-plane.do
+     grep -q '^rpc-rotate=true' /host/tmp/control-plane.do 2>/dev/null || echo "rpc-rotate=true ; --check" >> /host/tmp/control-plane.do
   fi
 
 
   if [[ "$RESTARTS" -ge 3 ]]; then
     echo "$(log_stamp) [log] [event] - RPC Rotate Triggered sent"
-    grep -q '^rpc-rotate=true' /host/tmp/control-plane.do || echo "rpc-rotate=true" >> /host/tmp/control-plane.do
+    grep -q '^rpc-rotate=true' /host/tmp/control-plane.do 2>/dev/null || echo "rpc-rotate=true" >> /host/tmp/control-plane.do
     echo "$(log_stamp) [log] - should trigger within a  minutes on the host control-plane."
   fi
 
@@ -152,7 +152,7 @@ if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
             --field-selector involvedObject.name="$POD" \
             --sort-by=.lastTimestamp | tail -n 10 | grep -v '^[[:space:]]*$'
           echo "$(log_stamp) [log] - Sending check-current-rpc trigger to Control Plane, due to Provider Pod Restart"
-          grep -q '^check-current-rpc=true' /host/tmp/control-plane.do || echo "check-current-rpc=true" >> /host/tmp/control-plane.do
+          grep -q '^check-current-rpc=true' /host/tmp/control-plane.do 2>/dev/null || echo "check-current-rpc=true" >> /host/tmp/control-plane.do
 
           break
       fi
