@@ -30,21 +30,6 @@ log_stamp() {
   echo $CURRENT_PALADIN_VERSION 
   echo "============================"
 
-echo "$(log_stamp) [log] - check for paladin akash rpc node stored file request sent to control-plane"
-echo "check-current-rpc=true" >> /host/tmp/control-plane.do
-
-#check_rpc() {
-#  local status="${1%/}/status" resp catch t0 now
-#  resp=$(curl -s --max-time 5 "$status") || return 1
-#  [[ -z $resp ]] && return 1
-#  catch=$(jq -r .result.sync_info.catching_up <<<"$resp")
-#  [[ $catch != "false" ]] && return 1
-#  t0=$(jq -r .result.sync_info.earliest_block_time <<<"$resp")
-#  t0=$(date -d "$t0" +%s); now=$(date +%s)
-#  echo $(( (now - t0) / 3600 ))
-#}
-
-
 while true; do
   echo "$(log_stamp) [log] - Checking Provider Pod restarts"
   POD="akash-provider-0"
