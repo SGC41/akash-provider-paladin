@@ -7,31 +7,39 @@ log_stamp() {
 
 
 echo "$(log_stamp) [log] - checking akash-provider-rpc.conf - paladin rpc memory"
- RAW=$(kubectl exec -n akash-services akash-provider-0 -c provider -- \
-            printenv AKASH_NODE_1_PORT_26657_TCP 2>/dev/null)
 
-          if [[ -z "$RAW" ]]; then
-            echo "No AKASH_NODE_1_PORT_26657_TCP found"
-            exit 1
-          fi
+check_rpc() {
+  local status="${1%/}/status" resp catch t0 now
+  resp=$(curl -s --max-time 5 "$status") || return 1
+  [[ -z $resp ]] && return 1
+  catch=$(jq -r .result.sync_info.catching_up <<<"$resp")
+  [[ $catch != "false" ]] && return 1
+  t0=$(jq -r .result.sync_info.earliest_block_time <<<"$resp")
+  t0=$(date -d "$t0" +%s); now=$(date +%s)
+  echo $(( (now - t0) / 3600 ))
+}
 
-          HOST=$(echo "$RAW" | sed -E 's#^tcp://([^:]+):([0-9]+)$#\1#')
-          PORT=$(echo "$RAW" | sed -E 's#^tcp://([^:]+):([0-9]+)$#\2#')
+RAW=$(kubectl exec -n akash-services akash-provider-0 -c provider -- \
+  printenv AKASH_NODE 2>/dev/null)
 
-          if [[ "$PORT" == "26657" ]]; then
-            SCHEME="http"
-          elif [[ "$PORT" == "440" ]]; then
-            SCHEME="https"
-          else
-            SCHEME="https"
-          fi
-
-          rpc_node_url="${SCHEME}://${HOST}:${PORT}"
 stored_rpc_node_url="blank"
-[ -f /host/tmp/akash-provider-rpc.conf ] && stored_rpc_node_url=$(< /host/tmp/akash-provider-rpc.conf)
-if [[ "$stored_rpc_node_url" != "$rpc_node_url" ]]; then
+
+echo "$(log_stamp) [log] - Pulled RPC NODE $RAW"
+
+  if [[ "$RAW" == "http://akash-node-1:26657" ]]; then
+    echo "$(log_stamp) [log] - Local RPC detected, getting ip"
+    # ── Fetch provider host_uri from blockchain ────────────────
+    NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o jsonpath='{.subsets[0].addresses[0].ip}')
+    probe_url="http://${NODE_IP}:26657"
+  else
+    probe_url="$RAW"
+  fi
+
+echo "$(log_stamp) [log] - $probe_url"
+[ -f /tmp/akash-provider-rpc.conf ] && stored_rpc_node_url=$(< /tmp/akash-provider-rpc.conf) && echo "$(log_stamp) [log] - Found RPC file, loading"
+if [[ "$stored_rpc_node_url" != "$probe_url" ]]; then
           echo "$(log_stamp) [log] - paladin tmp stored rpc not same as current, updating tmp/akash-provider-rpc.conf"
-          echo "$rpc_node_url" > /tmp/akash-provider-rpc.conf
+          echo "$probe_url" > /tmp/akash-provider-rpc.conf
 else
 echo "$(log_stamp) [log] - akash-provider-rpc.conf verified"
 fi
