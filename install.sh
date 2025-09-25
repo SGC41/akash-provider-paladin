@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-set -euo pipefail
-set -x
+set -euox pipefail
+
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
 # v2.9.0
