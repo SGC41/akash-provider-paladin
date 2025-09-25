@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# v2.9.0
+# v2.9.1
 
 log_stamp() {
   echo "[$(date -u +"%Y-%m-%d %H:%M:%S")]"
