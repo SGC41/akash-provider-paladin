@@ -196,7 +196,9 @@ CRONLINE="*/2 * * * * [ -f /tmp/control-plane.do ] && /bin/bash \"/root/akash-pr
 SCRIPT_PATH="akash-provider-paladin"
 
 # Remove any existing cron jobs that reference the script (regardless of timing)
-crontab -l 2>/dev/null | grep -v "$SCRIPT_PATH" | { cat; echo "$CRONLINE"; } | crontab -
+( crontab -l 2>/dev/null || true ) | grep -v "$SCRIPT_PATH" | { cat; echo "$CRONLINE"; } | crontab -
+
+#crontab -l 2>/dev/null | grep -v "$SCRIPT_PATH" | { cat; echo "$CRONLINE"; } | crontab -
 
 # ───────────────────────────────────────────────────────
 
