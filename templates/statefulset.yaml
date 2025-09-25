@@ -56,7 +56,6 @@ spec:
               echo "Akash Paladin Pod Initiated"
               # apt won't work not sure how best to solve it
               # since it's not needed, I've left it as is...
-              apk add --no-cache curl
 
               {{ .Values.scriptToRun }}
           resources:
