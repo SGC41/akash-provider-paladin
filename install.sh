@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-set -uox pipefail
+set -uoe pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.9.0
+# v2.9.1
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 TARGET_DIR="$HOME/akash-provider-paladin"
