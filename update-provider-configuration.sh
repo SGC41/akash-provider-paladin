@@ -40,26 +40,27 @@ sleep 15
 echo "step to verify it's been started."
 kubectl -n akash-services get statefulsets && kubectl -n akash-services get pods -l app=akash-provide
 
-echo "saving new rpc node to tmp/akash-provider-rpc.conf"
- RAW=$(kubectl exec -n akash-services akash-provider-0 -c provider -- \
-            printenv AKASH_NODE_1_PORT_26657_TCP 2>/dev/null)
+# This turned out not to be useful, since code in other scripts wasn't viable.
+#echo "saving new rpc node to tmp/akash-provider-rpc.conf"
+# RAW=$(kubectl exec -n akash-services akash-provider-0 -c provider -- \
+#            printenv AKASH_NODE_1_PORT_26657_TCP 2>/dev/null)
 
-          if [[ -z "$RAW" ]]; then
-            echo "No AKASH_NODE_1_PORT_26657_TCP found"
-            exit 1
-          fi
+ #         if [[ -z "$RAW" ]]; then
+ #           echo "No AKASH_NODE_1_PORT_26657_TCP found"
+ #           exit 1
+ #         fi
 
-          HOST=$(echo "$RAW" | sed -E 's#^tcp://([^:]+):([0-9]+)$#\1#')
-          PORT=$(echo "$RAW" | sed -E 's#^tcp://([^:]+):([0-9]+)$#\2#')
+ #         HOST=$(echo "$RAW" | sed -E 's#^tcp://([^:]+):([0-9]+)$#\1#')
+ #         PORT=$(echo "$RAW" | sed -E 's#^tcp://([^:]+):([0-9]+)$#\2#')
 
-          if [[ "$PORT" == "26657" ]]; then
-            SCHEME="http"
-          elif [[ "$PORT" == "440" ]]; then
-            SCHEME="https"
-          else
-            SCHEME="https"
-          fi
+ #         if [[ "$PORT" == "26657" ]]; then
+ #           SCHEME="http"
+ #         elif [[ "$PORT" == "440" ]]; then
+ #           SCHEME="https"
+ #         else
+ #           SCHEME="https"
+ #         fi
 
-          rpc_node_url="${SCHEME}://${HOST}:${PORT}"
-          echo "$rpc_node_url" > /tmp/akash-provider-rpc.conf
+  #        rpc_node_url="${SCHEME}://${HOST}:${PORT}"
+  #        echo "$rpc_node_url" > /tmp/akash-provider-rpc.conf
 

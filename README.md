@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.9.1
+# Akash Provider Paladin v2.9.2
 Paladin will help keep providers operational and safe.
 
 Please report bugs, should be pretty functional now.
@@ -31,6 +31,10 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.9.2
+     Mostly bug fixes and new feature repairs.
+     update-provider-configuration.sh now functions as it did in 2.8.x
+
 - v2.9.0 
      Latest version check, added in paladin pod.
      Immediate RPC sync check after provider pod restarts

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# v 2.9.0
+# v 2.9.2
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
@@ -33,16 +33,16 @@ log_stamp() {
 echo "$(log_stamp) [log] - check for paladin akash rpc node stored file request sent to control-plane"
 echo "check-current-rpc=true" >> /host/tmp/control-plane.do
 
-check_rpc() {
-  local status="${1%/}/status" resp catch t0 now
-  resp=$(curl -s --max-time 5 "$status") || return 1
-  [[ -z $resp ]] && return 1
-  catch=$(jq -r .result.sync_info.catching_up <<<"$resp")
-  [[ $catch != "false" ]] && return 1
-  t0=$(jq -r .result.sync_info.earliest_block_time <<<"$resp")
-  t0=$(date -d "$t0" +%s); now=$(date +%s)
-  echo $(( (now - t0) / 3600 ))
-}
+#check_rpc() {
+#  local status="${1%/}/status" resp catch t0 now
+#  resp=$(curl -s --max-time 5 "$status") || return 1
+#  [[ -z $resp ]] && return 1
+#  catch=$(jq -r .result.sync_info.catching_up <<<"$resp")
+#  [[ $catch != "false" ]] && return 1
+#  t0=$(jq -r .result.sync_info.earliest_block_time <<<"$resp")
+#  t0=$(date -d "$t0" +%s); now=$(date +%s)
+#  echo $(( (now - t0) / 3600 ))
+#}
 
 
 while true; do
@@ -166,19 +166,9 @@ if kubectl -n "$NS" get pod "$POD" &>/dev/null; then
           kubectl -n "$NS" get events \
             --field-selector involvedObject.name="$POD" \
             --sort-by=.lastTimestamp | tail -n 10 | grep -v '^[[:space:]]*$'
+          echo "$(log_stamp) [log] - Sending check-current-rpc trigger to Control Plane, due to Provider Pod Restart"
+          grep -q '^check-current-rpc=true' /host/tmp/control-plane.do || echo "check-current-rpc=true" >> /host/tmp/control-plane.do
 
-          # Check if RPC node is working
-          echo "Verifying RPC node is working"
-
-          probe_url=$(< /host/tmp/akash-provider-rpc.conf)
-          echo "loaded rpc node from file /tmp/akash-provider-rpc.conf $probe_url"
-
-          hrs=$(check_rpc "$probe_url") || {
-            echo "[rpc] $probe_url failed health check — sending RPC rotate"
-            grep -q '^rpc-rotate=true' /host/tmp/control-plane.do || echo "rpc-rotate=true" >> /host/tmp/control-plane.do
-          }
-
-          echo "[rpc] checked $probe_url RPC node Synced for (${hrs}h)"
           break
       fi
   done < <(

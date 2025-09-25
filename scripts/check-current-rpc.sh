@@ -6,7 +6,7 @@ log_stamp() {
 }
 
 
-echo "$(log_stamp) [log] - checking akash-provider-rpc.conf - paladin rpc memory"
+echo "$(log_stamp) [log] - Checking current RPC Node is synced and functional"
 
 check_rpc() {
   local status="${1%/}/status" resp catch t0 now
@@ -22,7 +22,7 @@ check_rpc() {
 RAW=$(kubectl exec -n akash-services akash-provider-0 -c provider -- \
   printenv AKASH_NODE 2>/dev/null)
 
-stored_rpc_node_url="blank"
+#stored_rpc_node_url="blank"
 
 echo "$(log_stamp) [log] - Pulled RPC NODE $RAW"
 
@@ -34,13 +34,10 @@ echo "$(log_stamp) [log] - Pulled RPC NODE $RAW"
   else
     probe_url="$RAW"
   fi
+          # Check if RPC node is working
+          hrs=$(check_rpc "$probe_url") || {
+            echo "$(log_stamp) [log] - [rpc] $probe_url failed health check — tiggering RPC rotation"
+            "$HOME"/akash-provider-paladin/scripts/rpc-rotate.sh
+          }
 
-echo "$(log_stamp) [log] - $probe_url"
-[ -f /tmp/akash-provider-rpc.conf ] && stored_rpc_node_url=$(< /tmp/akash-provider-rpc.conf) && echo "$(log_stamp) [log] - Found RPC file, loading"
-if [[ "$stored_rpc_node_url" != "$probe_url" ]]; then
-          echo "$(log_stamp) [log] - paladin tmp stored rpc not same as current, updating tmp/akash-provider-rpc.conf"
-          echo "$probe_url" > /tmp/akash-provider-rpc.conf
-else
-echo "$(log_stamp) [log] - akash-provider-rpc.conf verified"
-fi
-
+          echo "$(log_stamp) [log] - [rpc] checked $probe_url RPC node Synced for (${hrs}h)"
