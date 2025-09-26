@@ -1,7 +1,15 @@
 # Akash Provider Paladin v2.9.3
 Paladin will help keep providers operational and safe.
 
-Please report bugs, should be pretty functional now.
+Paladin was tested on manual installed providers.
+
+Not recommended for akash console webui installed provider.
+would also think it works just fine on playscript installed providers.
+
+if you do use it on akash console webui installed providers, scale paladin down, while upgrading.
+and let me know how it goes, i suspect paladin will basically disable the webui provider configurations.
+
+Please report bugs.
 Minor releases will usually be bug fixes, have an issue run the install command again.
 
 
