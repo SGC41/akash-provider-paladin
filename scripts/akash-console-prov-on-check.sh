@@ -1,5 +1,5 @@
 #!/bin/bash
-# v2.8.3
+# v2.9.3
 # Simple Description of funtions
 #
 # changed from 1hr to 16 minutes, and will change checks from 30 to 20.
@@ -43,6 +43,11 @@ log_stamp() {
   echo "[$(date -u +"%Y-%m-%d %H:%M:%S")]"
 }
 
+# Color codes
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color (reset)
 
 # Verify wallet address starts with "akash"
 if ! [[ "$PROVIDER" =~ ^akash ]]; then
@@ -56,7 +61,7 @@ if [[ -f "$HOME/akash-provider-paladin/.start-provider.tmp" ]]; then
   echo "$(log_stamp) [log] [Info] [✓] Trigger file found — starting provider action"
   kubectl scale statefulsets akash-provider --replicas=1 -n akash-services
   rm -f "$HOME/akash-provider-paladin/.start-provider.tmp"
-  exit 0
+  echo "Waiting sleep 40 sec, before continuing, so Akash Provider Pod can Start" && sleep 40
 else
   echo "$(log_stamp) [log] [Info] […] Trigger file not found — skipping start provider action"
 fi
@@ -76,7 +81,7 @@ API_ENDPOINT="https://console-api.akash.network/v1/providers/${PROVIDER}"
 
   # Check if provider info was found
   if [ -z "$PROVIDER_INFO" ]; then
-    echo "$(log_stamp) [log] [Warn] Provider not found in Akash Console API"
+    echo -e "$(log_stamp) [log] [${RED}[Warn] Provider not found in Akash Console API${NC}]"
     exit 0
   fi
 
@@ -85,7 +90,7 @@ API_ENDPOINT="https://console-api.akash.network/v1/providers/${PROVIDER}"
   LAST_ONLINE_DATE=$(jq -r '.lastOnlineDate' <<< "$PROVIDER_INFO")
   CONSOLE_CURRENT_LEASES=$(jq -r '.leaseCount' <<< "$PROVIDER_INFO")
   # Print results
-  echo "$(log_stamp) [log] [Info]Provider is online: $IS_ONLINE"
+  echo -e "$(log_stamp) [log] [Info]Provider is online:[${GREEN} $IS_ONLINE ${NC}]"
   echo "$(log_stamp) [log] [Info]Last online date: $LAST_ONLINE_DATE"
   echo "$(log_stamp) [log] [Info]Current recorded Akash Console leases: $CONSOLE_CURRENT_LEASES"
   # Clean up temporary file
@@ -94,18 +99,19 @@ API_ENDPOINT="https://console-api.akash.network/v1/providers/${PROVIDER}"
 
 # This part will be triggered if Console offline provider online issue is suspected.
 if [[ "$IS_ONLINE" == "false" ]]; then
-  echo "$(log_stamp) [log] [Info][⚠] Akash Console reports provider as offline"
+  echo -e "$(log_stamp) [log] [Info][⚠] ${RED} Akash Console reports provider as offline${NC}"
 
 
       #Akash Console Fix Wait.
       if [[ ! -f "$LAST_FIX_ATTEMPT" || "$(cut -d' ' -f3 "$LAST_FIX_ATTEMPT")" == "2_HOUR_WAIT" ]]; then
 	#checks if 2 hours have passed.
           if [[ ! -f "$LAST_FIX_ATTEMPT" || $(( $(date +%s) - $(date -d "$(cut -d' ' -f1-2 "$LAST_FIX_ATTEMPT")" +%s) )) -ge $((105*60)) ]]; then
-            echo "60 minute wait for akash console fix reached, creating .start-provider.tmp file, so that next run will start the provider, will take a bit longer, like 30 to 60 minutes... code needs improvements time codes." > $HOME/akash-provider-paladin/.start-provider.tmp && \
+            echo -e "$(log_stamp) [log] [${YELLOW} 60 minute wait for akash console fix reached, creating .start-provider.tmp file, so that next run will start the provider, will take a bit longer, like 30 to 60 minutes... code needs improvements time codes. ${NC}]" > $HOME/akash-provider-paladin/.start-provider.tmp && \
             echo "$NOW DAILY_DONE" > "$LAST_FIX_ATTEMPT"
             exit 0
           fi
-          echo "akash-console-prov-on-check.sh still in 1 hour hold, which really takes like 2 hours, defined by .last_fix_akash_console_offline_issue.tm...  needs improvementsp the timing is not strict... should run by time codes rather than just code block cycles, future update maybe"
+          echo -e "$(log_stamp) [log] [${YELLOW}akash-console-prov-on-check.sh still in 1 hour hold, which really takes like 2 hours, defined by .last_fix_akash_console_offline_issue.tmp "
+          echo "$(log_stamp) [note]  needs improvementsp the timing is not strict... should run by time codes rather than just code block cycles, future update maybe ${NC}]"
 
           exit 0
 
@@ -128,18 +134,6 @@ if [[ "$IS_ONLINE" == "false" ]]; then
   fi
 
 
-  #RPC_NODE_ACTIVE=$(yq -r '.node // "https://rpc-akash.ecostake.com:443"' "$PROVIDER_YAML_FILE")
-  #if RPC_NODE_ACTIVE == "http://akash-node-1:26657" then 
-  #
-  ## ── Fetch provider host_uri from blockchain ────────────────
-  #NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o jsonpath='{.subsets[0].addresses[0].ip}')
-  #BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "http://${NODE_IP}:26657" | jq -r '.host_uri')
-  #else
-  #BLOCKCHAIN_PROVIDER_URL=$(provider-services query provider get "$PROVIDER" -o json --node "$RPC_NODE_ACTIVE" | jq -r '.host_uri')
-  #fi
-  # ── Sanitize URL (strip protocol) ──────────────────────────
-  # old  BLOCKCHAIN_DOMAIN=$(echo "$BLOCKCHAIN_PROVIDER_URL" | sed -E 's|^https?://||')
-
   BLOCKCHAIN_DOMAIN=$(echo "$BLOCKCHAIN_PROVIDER_URL" \
     | sed -E 's|^[a-zA-Z]+://||' \
     | sed -E 's|:[0-9]+.*$||' \
@@ -156,8 +150,8 @@ if [[ "$IS_ONLINE" == "false" ]]; then
     echo "$(log_stamp) [log] [Info][✓] Provider local API appears reachable"
     echo "$(log_stamp) [log] [Info][ℹ] Continuing provider status verification..."
   else
-    echo "$(log_stamp) [log] [Info][✗] Mismatch: Blockchain host_uri ($BLOCKCHAIN_DOMAIN) vs provider.yaml ($LOCAL_DOMAIN)"
-    echo "$(log_stamp) [log] [Info][!] Provider API not responding"
+    echo -e "$(log_stamp) [log] [${RED} [Info][✗] Mismatch: Blockchain host_uri ($BLOCKCHAIN_DOMAIN) vs provider.yaml ($LOCAL_DOMAIN) ${NC}]"
+    echo -e "$(log_stamp) [log] [${RED} [Info][!] Provider API not responding ${NC}]"
        # inset script block performs check that provider api is running and if not initiates temporary provider pod scale down
        # this seems to make the provider be registered as online with Akash Console, when spun back up after an unknown amount of time.
         echo "$(log_stamp) [log] [Info]Provider Pod Check with Age Info"
@@ -198,7 +192,8 @@ if [[ "$IS_ONLINE" == "false" ]]; then
 
   # ── Check time delta ───────────────────────────────────────
   NOW=$(date -u +"%Y-%m-%d %H:%M:%S")
-  TODAY=$(cut -d' ' -f1 "$NOW")   # time only
+  TODAY=$(cut -d' ' -f1 <<< "$NOW") #time only
+#  TODAY=$(cut -d' ' -f1 "$NOW")   # time only
   LAST_UNIX=$(date -d "$LAST_ONLINE_DATE" +"%s")
   NOW_UNIX=$(date +"%s")
   OFFLINE_DURATION=$((NOW_UNIX - LAST_UNIX))
