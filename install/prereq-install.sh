@@ -1,9 +1,10 @@
-#!/bin/bash
-# v2.5.14
+#!/usr/bin/env bash
+# v2.9.1
 # Commands added here will be installed on all control planes in the cluster, during paladin reinstall / upgrades
 
 sudo apt install wget jq -y
 sudo snap install yq
+sudo apt install curl -y
 
 #provider services check, needs improvements, but functional.
 version=$(provider-services version 2>/dev/null)

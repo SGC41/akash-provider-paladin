@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# v2.9.1
+
+log_stamp() {
+  echo "[$(date -u +"%Y-%m-%d %H:%M:%S")]"
+}
+
+
+echo "$(log_stamp) [log] - Checking current RPC Node is synced and functional"
+
+check_rpc() {
+  local status="${1%/}/status" resp catch t0 now
+  resp=$(curl -s --max-time 5 "$status") || return 1
+  [[ -z $resp ]] && return 1
+  catch=$(jq -r .result.sync_info.catching_up <<<"$resp")
+  [[ $catch != "false" ]] && return 1
+  t0=$(jq -r .result.sync_info.earliest_block_time <<<"$resp")
+  t0=$(date -d "$t0" +%s); now=$(date +%s)
+  echo $(( (now - t0) / 3600 ))
+}
+
+RAW=$(kubectl exec -n akash-services akash-provider-0 -c provider -- \
+  printenv AKASH_NODE 2>/dev/null)
+
+#stored_rpc_node_url="blank"
+
+echo "$(log_stamp) [log] - Pulled RPC NODE $RAW"
+
+  if [[ "$RAW" == "http://akash-node-1:26657" ]]; then
+    echo "$(log_stamp) [log] - Local RPC detected, getting ip"
+    # ── Fetch provider host_uri from blockchain ────────────────
+    NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o jsonpath='{.subsets[0].addresses[0].ip}')
+    probe_url="http://${NODE_IP}:26657"
+  else
+    probe_url="$RAW"
+  fi
+          # Check if RPC node is working
+          hrs=$(check_rpc "$probe_url") || {
+            echo "$(log_stamp) [log] - [rpc] $probe_url failed health check — tiggering RPC rotation"
+            "$HOME"/akash-provider-paladin/scripts/rpc-rotate.sh
+          }
+
+          echo "$(log_stamp) [log] - [rpc] checked $probe_url RPC node Synced for (${hrs}h)"

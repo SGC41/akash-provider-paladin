@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.8.4
+# Akash Provider Paladin v2.9.3
 Paladin will help keep providers operational and safe.
 
 Please report bugs, should be pretty functional now.
@@ -31,9 +31,31 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.9.3
+     Added a bit of color to logs, for better readability.
+
+- v2.9.2
+     Mostly bug fixes and new feature repairs.
+     update-provider-configuration.sh now functions as it did in 2.8.x
+
+- v2.9.0 
+     Latest version check, added in paladin pod.
+     Immediate RPC sync check after provider pod restarts
+     Bug fixes and more bug fixes.
+
+- v2.8.8
+     feature from 2.8.0 last fix hopefully.
+
+- v2.8.6
+     Changed logging by ticker.sh during early break in sleep.
+     Now shows reasons for provider pod restarts.
+
+- v2.8.5
+     Bug fix, making the 2.8.0 - Reduced Provider Pod restart detection feature actually immediate.
+
 - v2.8.4
-    Added --version flag to up update-provider-yaml.sh
-    so that the provider doesn't break when updating via helm.
+     Added --version flag to up update-provider-yaml.sh
+     so that the provider doesn't break when updating via helm.
 
 - V2.8.3 
      Various quanity of life improvements.
@@ -173,8 +195,9 @@ most if not all, non timing related logging will be accessible here.
 
 Note -  Logs will be created on the control-plane that hosted the paladin pod at the time of events.
         However... the pod favors the control-plane it was installed on, and thus logs will usually be there.
+	less commands : CTRL+C to stop Follow, SHIFT+F to follow, q to quit
 ```
-nano /var/log/akash-provider-paladin/$(date +\%d)-this-month.log
+less -R +F /var/log/akash-provider-paladin/$(date +\%d)-this-month.log
 ```
 
 The Paladin pod logs are nearly useless, since its only a cluster timer, to avoid split brain behavior and pod downtime.

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.7.3
+# v2.9.3
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 TARGET_DIR="$HOME/akash-provider-paladin"
@@ -186,13 +186,19 @@ COLD_WALLET=$(yq -r '.paladin_cold_wallet // "NONE"' "$CONFIG" | tr -d '"')
 
 echo "[*] Installing cronjob on local control plane..."
 
+mkdir -p /var/log/akash-provider-paladin
+chown root:root /var/log/akash-provider-paladin
+chmod 755 /var/log/akash-provider-paladin
+echo "created paladin log folder"
 CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash \"/root/akash-provider-paladin/scripts/ticker-control-plane.sh\" >> \"/var/log/akash-provider-paladin/\$(date +\\%d)-this-month.log\" 2>&1 && rm -f /tmp/control-plane.do"
 
 #CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash "/root/akash-provider-paladin/scripts/ticker-control-plane.sh" >> "/var/log/akash-provider-paladin/$(date +\%d)-this-month.log" 2>&1 && rm -f /tmp/control-plane.do"
 SCRIPT_PATH="akash-provider-paladin"
 
 # Remove any existing cron jobs that reference the script (regardless of timing)
-crontab -l 2>/dev/null | grep -v "$SCRIPT_PATH" | { cat; echo "$CRONLINE"; } | crontab -
+( crontab -l 2>/dev/null || true ) | grep -v "$SCRIPT_PATH" | { cat; echo "$CRONLINE"; } | crontab -
+
+#crontab -l 2>/dev/null | grep -v "$SCRIPT_PATH" | { cat; echo "$CRONLINE"; } | crontab -
 
 # ───────────────────────────────────────────────────────
 
