@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.9.3
+# Akash Provider Paladin v2.9.4
 Paladin will help keep providers operational and safe.
 
 Paladin was tested on manual installed providers.
@@ -39,6 +39,10 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.9.4
+     Added Completed pod state to clean up script, leaving them causes issues
+	       (Provider sees resources as allocated)
+		   
 - v2.9.3
      Added a bit of color to logs, for better readability.
 
