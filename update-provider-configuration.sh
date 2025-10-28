@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#  v2.9.0
+#  v2.9.5
 # reduced sleep during downtime to 5 seconds
 
 set -euo pipefail
@@ -27,10 +27,15 @@ kubectl -n akash-services get statefulsets && kubectl -n akash-services get pods
 
 sleep 1
 echo "# updating"
+#helm upgrade --install akash-provider akash/provider -n akash-services \
+#  --version 11.6.4 \
+#  -f "$PROVIDER_YAML" \
+#  --set bidpricescript="$(openssl base64 -A < "$PRICE_SCRIPT")"
+
 helm upgrade --install akash-provider akash/provider -n akash-services \
-  --version 11.6.4 \
   -f "$PROVIDER_YAML" \
   --set bidpricescript="$(openssl base64 -A < "$PRICE_SCRIPT")"
+
 
 sleep 3
 echo "Start Provider"
