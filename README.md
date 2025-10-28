@@ -42,6 +42,8 @@ Paladin will help keep providers operational.
 - v2.9.5
 	Regular updates and some minor corrections.
 	like how to correctly scale down, in the README.md
+	removed the version lock in the provider update script..
+	will be added back later or same features, but needs to be less in the way.
 
 - v2.9.4
      Added Completed pod state to clean up script, leaving them causes issues
