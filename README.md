@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.9.4
+# Akash Provider Paladin v2.9.5
 Paladin will help keep providers operational and safe.
 
 Paladin was tested on manual installed providers.
@@ -39,6 +39,12 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.9.5
+	Regular updates and some minor corrections.
+	like how to correctly scale down, in the README.md
+	removed the version lock in the provider update script..
+	will be added back later or same features, but needs to be less in the way.
+
 - v2.9.4
      Added Completed pod state to clean up script, leaving them causes issues
 	       (Provider sees resources as allocated)
@@ -164,11 +170,11 @@ Now runs its own pod called akash-provider-paladin, which cannot get stuck and h
 Paladin Pod Shutdown Command
 Again shouldn't really be needed
 ```
-kubectl scale deployment akash-provider-paladin-0 --replicas=0 -n akash-services
+  kubectl -n akash-services scale statefulsets akash-provider-paladin --replicas=0
 ```
 Paladin Pod Start Up
 ```
- kubectl scale deployment akash-provider-paladin-0 --replicas=1 -n akash-services
+ kubectl -n akash-services scale statefulsets akash-provider-paladin --replicas=1
 ```
 
 
