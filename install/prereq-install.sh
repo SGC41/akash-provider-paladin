@@ -17,11 +17,13 @@ min=$(printf '%s\n' "$current" "$gittag" \
       | sort -V \
       | head -n1)
 
+echo "Checking provider-services binary"
+
 if [ "$min" != "$gittag" ]; then
-  echo "⚠️ Detected outdated version: $version — updating to v$baseline…"
+  echo "⚠️ Detected outdated version: $version — updating to v$gittag…"
   cd "$HOME"
   wget --no-clobber \
-    "https://github.com/akash-network/provider/releases/download/v${baseline}/provider-services_${gittag}_linux_amd64.deb"
+    "https://github.com/akash-network/provider/releases/download/v${gittag}/provider-services_${gittag}_linux_amd64.deb"
 
   dpkg -i provider-services*.deb
   rm -f /usr/local/bin/provider-services
@@ -29,7 +31,7 @@ if [ "$min" != "$gittag" ]; then
   hash -r
 
 else
-  echo "Your version ($version) is ≥ v$baseline — no update needed."
+  echo "Your version ($version) is ≥ v$gittag — no update needed."
 fi
 
 #log setup
