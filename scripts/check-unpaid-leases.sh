@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Paladin v2.9.6
-# check-unpaid-leases.sh v1.1.1
+# check-unpaid-leases.sh v1.1.2
 # creator SGC | DCnorse
 # 2025-11-02
 #
@@ -46,6 +46,8 @@
 
 set -uo pipefail
 trap 'echo "[Crash] Exited at line $LINENO"' ERR
+export AP_MINIMUM_GAS_PRICES="0.0025uakt"
+
 
 snap list yq || sudo snap install yq
 # ── Config & Globals ──────────────────────────────────────────────────────────

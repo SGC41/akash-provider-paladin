@@ -14,7 +14,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-CURRENT_PALADIN_VERSION="v2.9.x"
+CURRENT_PALADIN_VERSION="v2.10.x"
 BRANCH="stable"
 
 # Load defaults
@@ -108,8 +108,8 @@ minute=$(date +%M)
 #    "$SCRIPT_DIR/clear_stuck_pods.sh"
     echo "clear-stuck-pods=true" >> /host/tmp/control-plane.do && \
 
-    echo "check-unpaid-leases=true ; --execute" >> /host/tmp/control-plane.do && \
-    echo "$(log_stamp) [log] - check for unpaid leases request sent to control-plane"
+#    echo "check-unpaid-leases=true ; --execute" >> /host/tmp/control-plane.do && \
+#    echo "$(log_stamp) [log] - check for unpaid leases request sent to control-plane"
 
     echo "akash-console-prov-on-check=true" >> /host/tmp/control-plane.do && \
     echo "$(log_stamp) [log] - Akash Console Online check request sent to control-plane"

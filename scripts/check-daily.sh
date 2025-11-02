@@ -22,5 +22,5 @@ echo "check-wallet.sh --execute starting"
 #quick fix, not a great one...
 
 echo "Cleaning logs older than 23 days"
-rm -f "/var/log/akash-provider-paladin/$(date -d '23 days ago' +'%d')-this-month.log"
+find /var/log/akash-provider-paladin -maxdepth 1 -type f -name "*.log" -mtime +23 -exec rm -v {} \;
 
