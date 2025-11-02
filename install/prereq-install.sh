@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# v2.9.1
+# v2.9.6
 # Commands added here will be installed on all control planes in the cluster, during paladin reinstall / upgrades
 
 sudo apt install wget jq -y
@@ -10,17 +10,18 @@ sudo apt install curl -y
 version=$(provider-services version 2>/dev/null)
 
 current="${version#v}"
-baseline="0.7.0-rc8"
+gittag="v0.10.1"
+gittag="${gittag#v}"
 
-min=$(printf '%s\n' "$current" "$baseline" \
+min=$(printf '%s\n' "$current" "$gittag" \
       | sort -V \
       | head -n1)
 
-if [ "$min" != "$baseline" ]; then
+if [ "$min" != "$gittag" ]; then
   echo "⚠️ Detected outdated version: $version — updating to v$baseline…"
   cd "$HOME"
   wget --no-clobber \
-    "https://github.com/akash-network/provider/releases/download/v${baseline}/provider-services_${baseline}_linux_amd64.deb"
+    "https://github.com/akash-network/provider/releases/download/v${baseline}/provider-services_${gittag}_linux_amd64.deb"
 
   dpkg -i provider-services*.deb
   rm -f /usr/local/bin/provider-services

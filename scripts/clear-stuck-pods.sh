@@ -21,7 +21,7 @@ EXCLUDED_NAMESPACES=(
 
 # Pods to exclude (use namespace/podname format)
 EXCLUDED_PODS=(
-  "akash-services/operator-inventory-hardware-discovery-*"
+#  "akash-services/operator-inventory-hardware-discovery-*"
 #  "add-custom-pods-here"
 )
 

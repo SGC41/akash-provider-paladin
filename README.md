@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.9.5
+# Akash Provider Paladin v2.9.6
 Paladin will help keep providers operational and safe.
 
 Paladin was tested on manual installed providers.
@@ -39,6 +39,9 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.9.6
+	Fixed provider binary service, version issue and check.
+
 - v2.9.5
 	Regular updates and some minor corrections.
 	like how to correctly scale down, in the README.md
