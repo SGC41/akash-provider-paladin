@@ -25,7 +25,7 @@ if [ "$min" != "$gittag" ]; then
   wget --no-clobber \
     "https://github.com/akash-network/provider/releases/download/v${gittag}/provider-services_${gittag}_linux_amd64.deb"
 
-  dpkg -i provider-services*.deb
+  dpkg -i provider-services_${gittag}_linux_amd64.deb
   rm -f /usr/local/bin/provider-services
   provider-services version
   hash -r

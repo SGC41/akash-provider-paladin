@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# Paladin v2.8.0
-# check-unpaid-leases.sh v1.1.0
+# Paladin v2.9.6
+# check-unpaid-leases.sh v1.1.1
 # creator SGC | DCnorse
-# 2025-08-26
+# 2025-11-02
 #
 # Features
 # Checks for unpaid leases, by introducing delta triggered withdrawals of all leases.
@@ -107,6 +107,7 @@ $MANUAL && MIN_USD_THRESHOLD=0
 
 NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o 'jsonpath={.subsets[0].addresses[0].ip}' 2>/dev/null || echo "")
 if [[ -n "$NODE_IP" ]]; then
+  echo "$(log_stamp) [Info] Local RPC node found successfully"
   NODE_RPC="http://${NODE_IP}:26657"
 else
   [[ -z "$FALLBACK_RPC" || "$FALLBACK_RPC" == "null" ]] && {
@@ -371,6 +372,11 @@ echo
 echo "$(log_stamp)[Scanning] Provider manifests…"
 # read JSON objects into array
 mapfile -t manifest_items < <(kubectl -n lease get manifests -o json | jq -c '.items[]')
+
+  if $DEBUG; then
+     echo "manifest found locally"
+     echo "${manifest_items[@]}"
+  fi
 
 for item in "${manifest_items[@]}"; do
   lease_json=$($AKASH_CLI query market lease get \
