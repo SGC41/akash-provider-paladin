@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.9.6
+# Akash Provider Paladin v2.10.0
 Paladin will help keep providers operational and safe.
 
 Paladin was tested on manual installed providers.
@@ -39,11 +39,13 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
-- v2.9.6
+- v2.10.0
 	Fixed - provider binary service, version issue and check.
 	      - Install.sh now uses the same provider-services.deb it downloads. 
               - Logs should now be deleted when they are more than 23 days old, so that new logs won't be added on the tail end of month old.
 		Removed -this-month from log file names.
+		
+	Fixed - check-unpaid, Dynamic withdrawals and Lease Reports, withdrawals, deletions and such now works again.
 		
 
 - v2.9.5
