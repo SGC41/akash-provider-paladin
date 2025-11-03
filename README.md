@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.10.2
+# Akash Provider Paladin v2.10.3
 Paladin will help keep providers operational and safe.
 
 Paladin was tested on manual installed providers.
@@ -39,6 +39,10 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.10.3 
+	Fixed - Removed Balance from check-unpaid reports... because its seems to be a useless number, that i can't make sense of.
+                Cron install's again again......... again.
+                
 - v2.10.2
 	Fixed - Cron injection command, so this-month is dropped from log files.
 		Bumped tag so everything was updated on github.
