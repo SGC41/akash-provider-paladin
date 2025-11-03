@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Paladin v2.10.0
-# check-unpaid-leases.sh v1.1.2
+# Paladin v2.10.3
+# check-unpaid-leases.sh v1.2.0
 # creator SGC | DCnorse
 # 2025-11-02
 #
@@ -375,8 +375,8 @@ if [[ $state != "closed" ]]; then
 fi
 
    # 2k) build display line
-    lease_rows+=$(printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%-7.7s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
-    "$owner" "$dseq/$gseq/$oseq" "$state" "$action" "$reason" "$bal_usd" "$cost_month"  "$cost_hr" "$cons_usd" "$wd_usd" "$delta_usd" "$denom" "$cost_day" "$cost_per_withdrawal" "$lease_age_days" "\n" "$akash_lease_ns" "\n" "|" "\n"
+    lease_rows+=$(printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%-7.7s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+    "$owner" "$dseq/$gseq/$oseq" "$state" "$action" "$reason" "$cost_month"  "$cost_hr" "$cons_usd" "$wd_usd" "$delta_usd" "$denom" "$cost_day" "$cost_per_withdrawal" "$lease_age_days" "\n" "$akash_lease_ns" "\n" "|" "\n"
     )
 
 }
@@ -433,8 +433,8 @@ echo
 echo "Note that all values are USD normalized, except when noted Denom, these will be shown in their native denomination, for practical reasons."
 echo "ibc/170 is USDC or to be exact ibc/170C677610AC31DF0904FFE09CD3B5C657492170E7E52372E48756B71E56F2F1 and the other one is sandbox USDC"
 echo ""
-lease_header=$( printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%-7.7s\t%s\t%s\t%s\n\n" \
-  "Owner/Akash_Namespace" "dseq/gseq/oseq" "State" "Action" "Reason" "Balance" "Monthly(USD)" "Hourly" "Consumed" "-Withdrawn" "=Owed_Delta" "Denom" "Daily(Denom)" "Withdrawally(Denom)" "Age_Days" ) \
+lease_header=$( printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%-7.7s\t%s\t%s\t%s\n\n" \
+  "Owner/Akash_Namespace" "dseq/gseq/oseq" "State" "Action" "Reason" "Monthly(USD)" "Hourly" "Consumed" "-Withdrawn" "=Owed_Delta" "Denom" "Daily(Denom)" "Withdrawally(Denom)" "Age_Days" ) \
 
 echo -e "$lease_header\n\n$lease_rows" | column -t
 
