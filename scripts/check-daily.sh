@@ -1,9 +1,10 @@
 #!/bin/bash
 set pipefail -euo
+# paladin v2.10.0
 #
 # This script will be called every night at 3AM local, by Paladin Pod.
 # It exists to clearly add various script that will run daily.
-echo "check-daily v1.1.0 - starting"  
+echo "check-daily v1.1.1 - starting"  
 
 cd $HOME/akash-provider-paladin/scripts
 
@@ -22,5 +23,5 @@ echo "check-wallet.sh --execute starting"
 #quick fix, not a great one...
 
 echo "Cleaning logs older than 23 days"
-rm -f "/var/log/akash-provider-paladin/$(date -d '23 days ago' +'%d')-this-month.log"
+find /var/log/akash-provider-paladin -maxdepth 1 -type f -name "*.log" -mtime +23 -exec rm -v {} \;
 

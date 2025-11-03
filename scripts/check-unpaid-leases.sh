@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# Paladin v2.8.0
-# check-unpaid-leases.sh v1.1.0
+# Paladin v2.10.0
+# check-unpaid-leases.sh v1.1.2
 # creator SGC | DCnorse
-# 2025-08-26
+# 2025-11-02
 #
 # Features
 # Checks for unpaid leases, by introducing delta triggered withdrawals of all leases.
@@ -46,6 +46,8 @@
 
 set -uo pipefail
 trap 'echo "[Crash] Exited at line $LINENO"' ERR
+export AP_MINIMUM_GAS_PRICES="0.0025uakt"
+
 
 snap list yq || sudo snap install yq
 # ── Config & Globals ──────────────────────────────────────────────────────────
@@ -107,6 +109,7 @@ $MANUAL && MIN_USD_THRESHOLD=0
 
 NODE_IP=$(kubectl -n akash-services get ep akash-node-1 -o 'jsonpath={.subsets[0].addresses[0].ip}' 2>/dev/null || echo "")
 if [[ -n "$NODE_IP" ]]; then
+  echo "$(log_stamp) [Info] Local RPC node found successfully"
   NODE_RPC="http://${NODE_IP}:26657"
 else
   [[ -z "$FALLBACK_RPC" || "$FALLBACK_RPC" == "null" ]] && {
@@ -163,8 +166,12 @@ get_akt_price(){
 }
 
 # ── 1) Fetch block height & price ─────────────────────────────────────────────
+# test command 
+# export AP_MINIMUM_GAS_PRICES="0.0025uakt" && \
+# provider-services query block --node http://$(kubectl -n akash-services get ep akash-node-1 -o 'jsonpath={.subsets[0].addresses[0].ip}')":26657" | yq -o=json | jq -r
+# provider-services query block --node https://rpc-akash.ecostake.com:443 | yq -o=json | jq -r '.header.height'
 HEIGHT=$($AKASH_CLI query block --node "$RPC" \
-  | jq -r '.block.header.height')
+  | yq -o=json | jq -r '.header.height')
 
 # keep this function intact
 RAW_PRICE=$(get_akt_price)
@@ -183,6 +190,8 @@ chmod +x "$WITHDRAW_FILE" "$KILL_FILE"
 
 # ── 2) Core processor ─────────────────────────────────────────────────────────
 process_lease(){
+$DEBUG && echo "Starting process on" "$1 | yq -r"
+
   raw="$1"
   #reset
   action=none
@@ -191,19 +200,21 @@ process_lease(){
   lease_age_days=empty
 
   # 2a) extract JSON fields
-  state=$(jq -r '.lease.state'           <<<"$raw")
-  created_at=$(jq -r '.lease.created_at'      <<<"$raw")
-  rate_amt=$(jq -r '.lease.price.amount'    <<<"$raw")   # micro-uakt/block
-  cons_amt=$(jq -r '.escrow_payment.consumed.amount // empty' <<<"$raw")
-  bal_amt=$(jq -r '.escrow_payment.balance.amount // empty'     <<<"$raw")
-  wd_amt=$(jq -r '.escrow_payment.withdrawn.amount // empty'   <<<"$raw")
-  denom=$(jq -r '.escrow_payment.balance.denom'          <<<"$raw")
+  state=$(yq -r '.lease.state'           <<<"$raw")
+  created_at=$(yq -r '.lease.created_at'      <<<"$raw")
+  rate_amt=$(yq -r '.lease.price.amount'    <<<"$raw")   # micro-uakt/block
+  cons_amt=$(yq -r '.escrow_payment.state.unsettled.amount' <<<"$raw")
+  bal_amt=$(yq -r '.escrow_payment.state.balance.amount'     <<<"$raw")
+  wd_amt=$(yq -r '.escrow_payment.state.withdrawn.amount'   <<<"$raw")
+  denom=$(yq -r '.escrow_payment.state.balance.denom'          <<<"$raw")
 
-  owner=$(jq -r '.lease.lease_id.owner' <<<"$raw")
-  dseq=$(jq -r '.lease.lease_id.dseq'   <<<"$raw")
-  gseq=$(jq -r '.lease.lease_id.gseq'   <<<"$raw")
-  oseq=$(jq -r '.lease.lease_id.oseq'   <<<"$raw")
+  owner=$(yq -r '.lease.id.owner' <<<"$raw")
+  dseq=$(yq -r '.lease.id.dseq'   <<<"$raw")
+  gseq=$(yq -r '.lease.id.gseq'   <<<"$raw")
+  oseq=$(yq -r '.lease.id.oseq'   <<<"$raw")
   key="$owner-$dseq-$gseq-$oseq"
+
+$DEBUG && echo "Data extracted for" "$key"
 
   # Grab the Akash deployment namespace from label
   akash_lease_ns=$(kubectl get ns -l akash.network=true,akash.network/lease.id.provider="$WALLET" -o json \
@@ -239,7 +250,11 @@ lease_count=$((lease_count + 1))
   fi
 
   # 2c) compute age (blocks)
-  age_blocks=$(( HEIGHT - created_at ))
+  age_blocks=0
+
+  age_blocks=$(( ${HEIGHT:-0} - ${created_at:-0} ))
+
+  #  age_blocks=$(( HEIGHT - created_at ))
   lease_age_days=$((age_blocks / ((60 / 6) * 60 * 24)))
   # 2d) convert all micro-uakt → AKT
   #    rate_akt/block, cons_akt, bal_akt, withdrawn_akt
@@ -372,12 +387,17 @@ echo "$(log_stamp)[Scanning] Provider manifests…"
 # read JSON objects into array
 mapfile -t manifest_items < <(kubectl -n lease get manifests -o json | jq -c '.items[]')
 
+  if $DEBUG; then
+     echo "manifest found locally"
+     echo "${manifest_items[@]}"
+  fi
+
 for item in "${manifest_items[@]}"; do
   lease_json=$($AKASH_CLI query market lease get \
-    --owner "$(jq -r '.metadata.labels."akash.network/lease.id.owner"' <<<"$item")" \
-    --dseq  "$(jq -r '.metadata.labels."akash.network/lease.id.dseq"'  <<<"$item")" \
-    --gseq  "$(jq -r '.metadata.labels."akash.network/lease.id.gseq"'  <<<"$item")" \
-    --oseq  "$(jq -r '.metadata.labels."akash.network/lease.id.oseq"'  <<<"$item")" \
+    --owner "$(yq -r '.metadata.labels."akash.network/lease.id.owner" // 0' <<<"$item")" \
+    --dseq  "$(yq -r '.metadata.labels."akash.network/lease.id.dseq" // 0'  <<<"$item")" \
+    --gseq  "$(yq -r '.metadata.labels."akash.network/lease.id.gseq" // 0'  <<<"$item")" \
+    --oseq  "$(yq -r '.metadata.labels."akash.network/lease.id.oseq" // 0'  <<<"$item")" \
     --provider "$WALLET" --node "$RPC" -o json 2>/dev/null) || {
       echo "$(log_stamp)[Error] failed to fetch lease, skipping" >&2
       continue

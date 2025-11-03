@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# v 2.9.2
+# v 2.10.0
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
@@ -14,7 +14,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-CURRENT_PALADIN_VERSION="v2.9.x"
+CURRENT_PALADIN_VERSION="v2.10.x"
 BRANCH="stable"
 
 # Load defaults
