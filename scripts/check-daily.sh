@@ -1,9 +1,10 @@
 #!/bin/bash
 set pipefail -euo
+# paladin v2.10.0
 #
 # This script will be called every night at 3AM local, by Paladin Pod.
 # It exists to clearly add various script that will run daily.
-echo "check-daily v1.1.0 - starting"  
+echo "check-daily v1.1.1 - starting"  
 
 cd $HOME/akash-provider-paladin/scripts
 

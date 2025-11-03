@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# v 2.9.2
+# v 2.10.0
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
@@ -108,8 +108,8 @@ minute=$(date +%M)
 #    "$SCRIPT_DIR/clear_stuck_pods.sh"
     echo "clear-stuck-pods=true" >> /host/tmp/control-plane.do && \
 
-#    echo "check-unpaid-leases=true ; --execute" >> /host/tmp/control-plane.do && \
-#    echo "$(log_stamp) [log] - check for unpaid leases request sent to control-plane"
+    echo "check-unpaid-leases=true ; --execute" >> /host/tmp/control-plane.do && \
+    echo "$(log_stamp) [log] - check for unpaid leases request sent to control-plane"
 
     echo "akash-console-prov-on-check=true" >> /host/tmp/control-plane.do && \
     echo "$(log_stamp) [log] - Akash Console Online check request sent to control-plane"
