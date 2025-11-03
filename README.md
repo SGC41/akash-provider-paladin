@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.10.0
+# Akash Provider Paladin v2.10.2
 Paladin will help keep providers operational and safe.
 
 Paladin was tested on manual installed providers.
@@ -39,6 +39,10 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.10.2
+	Fixed - Cron injection command, so this-month is dropped from log files.
+		Bumped tag so everything was updated on github.
+
 - v2.10.0
 	Fixed - provider binary service, version issue and check.
 	      - Install.sh now uses the same provider-services.deb it downloads. 
