@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.11.0
+# Akash Provider Paladin v2.11.1
 Paladin will help keep providers operational and safe.
 
 Paladin was tested on manual installed providers.
@@ -39,6 +39,9 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- V2.11.1 
+        Improved logging outputs from check provider bids.
+
 - v2.11.0
 	Improved provider not bidding mitigation, was daily check and 12 hours of not bidding to trigger.
         now 15 min check and 2 hours not bidding to trigger... not an optimal solution, should most likely be longer
