@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Akash Provider Bid Watchdog v0.9
+# Akash Provider Bid Watchdog v1.0
 # Scans for MsgCreateBid activity. Restarts provider pod if last bid is too old.
 
 set -euo pipefail
@@ -9,13 +9,18 @@ set -euo pipefail
 LIMIT=100
 MAX_SKIP=3000
 SKIP=0
-MAX_MINUTES=(60*12)  # 🔁 Threshold for bid age before pod restart
+MAX_MINUTES=(60*2)  # 🔁 Threshold for bid age before pod restart
 
 CONFIG_PATH="$HOME/akash-provider-paladin/provider.yaml"
 WALLET_ADDRESS=$(yq -r '.from' "$CONFIG_PATH")
 
+log_stamp() {
+  echo "[$(date -u +"%Y-%m-%d %H:%M:%S")]"
+}
+
+
 if [[ -z "$WALLET_ADDRESS" ]] || ! [[ "$WALLET_ADDRESS" =~ ^akash ]]; then
-  echo "[!] Invalid wallet address"
+  echo "$(log_stamp) [Warn] Invalid wallet address"
   exit 1
 fi
 
@@ -34,14 +39,14 @@ while [[ "$SKIP" -lt "$MAX_SKIP" ]]; do
   if [[ -n "$MATCH" ]]; then
     MATCH_TS=$(date -u -d "$MATCH" +%s)
     AGE_MIN=$(( (NOW - MATCH_TS) / 60 ))
-    echo "[✓] Last MsgCreateBid at $MATCH — ${AGE_MIN} minutes ago"
+    echo "$(log_stamp) [Info] [✓] Last MsgCreateBid at $MATCH — ${AGE_MIN} minutes ago"
 
     if [[ "$AGE_MIN" -gt "$MAX_MINUTES" ]]; then
-      echo "[✗] Bid too old (> ${MAX_MINUTES} min) — restarting provider pod"
+      echo "$(log_stamp) [Warn] [✗] Bid too old (> ${MAX_MINUTES} min) — restarting provider pod"
       kubectl delete pod akash-provider-0 -n akash-services
       exit 0
     else
-      echo "[→] Bid is recent — no action needed"
+      echo "$(log_stamp) [Info] [→] Bid is recent — no action needed"
       exit 0
     fi
   fi
@@ -54,8 +59,8 @@ done
 CLOSE_COUNT=$(echo "$ALL_RESULTS" | jq '[ .[] | select(.messages[].type | test("^/akash.*MsgCloseBid$")) ] | length')
 
 if [[ "$CLOSE_COUNT" -ge 5 ]]; then
-  echo "[✗] No MsgCreateBid found, ${CLOSE_COUNT} MsgCloseBid detected — restarting provider pod"
+  echo "$(log_stamp) [Warn] [✗] No MsgCreateBid found, ${CLOSE_COUNT} MsgCloseBid detected — restarting provider pod"
   kubectl delete pod akash-provider-0 -n akash-services
 else
-  echo "[…] No MsgCreateBid detected, MsgCloseBid count (${CLOSE_COUNT}) below threshold — no action taken"
+  echo "$(log_stamp) [Info] […] No MsgCreateBid detected, MsgCloseBid count (${CLOSE_COUNT}) below threshold — no action taken"
 fi

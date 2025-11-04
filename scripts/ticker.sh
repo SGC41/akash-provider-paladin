@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# v 2.10.0
+# v 2.11.0
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
@@ -14,7 +14,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-CURRENT_PALADIN_VERSION="v2.10.x"
+CURRENT_PALADIN_VERSION="v2.11.x"
 BRANCH="stable"
 
 # Load defaults
@@ -117,6 +117,8 @@ minute=$(date +%M)
     echo "check-provider-liveness=true" >> /host/tmp/control-plane.do && \
     echo "$(log_stamp) [log] - Provider pod liveness check request sent to control-plane"
 
+    echo "check-provider-bids=true" >> /host/tmp/control-plane.do && \
+    echo "$(log_stamp) [log] - Provider pod bids check request sent to control-plane"
   fi
 
 # ── Wait until next 5 minute boundary, but watch for restarts ──
