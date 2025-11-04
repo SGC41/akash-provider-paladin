@@ -9,7 +9,7 @@ set -euo pipefail
 LIMIT=100
 MAX_SKIP=3000
 SKIP=0
-MAX_MINUTES=(60*12)  # 🔁 Threshold for bid age before pod restart
+MAX_MINUTES=(60*2)  # 🔁 Threshold for bid age before pod restart
 
 CONFIG_PATH="$HOME/akash-provider-paladin/provider.yaml"
 WALLET_ADDRESS=$(yq -r '.from' "$CONFIG_PATH")

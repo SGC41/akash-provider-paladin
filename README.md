@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.10.3
+# Akash Provider Paladin v2.11.0
 Paladin will help keep providers operational and safe.
 
 Paladin was tested on manual installed providers.
@@ -39,6 +39,11 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.11.0
+	Improved provider not bidding mitigation, was daily check and 12 hours of not bidding to trigger.
+        now 15 min check and 2 hours not bidding to trigger... not an optimal term solution, should most likely be longer
+        but for right now, its what i think, i want. provider seems never to be bidding.
+
 - v2.10.3 
 	Fixed - Removed Balance from check-unpaid reports... because its seems to be a useless number, that i can't make sense of.
                 Cron install's again again......... again.
