@@ -41,7 +41,7 @@ helm uninstall akash-provider-paladin -n akash-services
 Paladin will help keep providers operational.
 - v2.11.0
 	Improved provider not bidding mitigation, was daily check and 12 hours of not bidding to trigger.
-        now 15 min check and 2 hours not bidding to trigger... not an optimal term solution, should most likely be longer
+        now 15 min check and 2 hours not bidding to trigger... not an optimal solution, should most likely be longer
         but for right now, its what i think, i want. provider seems never to be bidding.
 
 - v2.10.3 
