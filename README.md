@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.11.4
+# Akash Provider Paladin v2.11.12
 Paladin will help keep providers operational and safe.
 
 Paladin was tested on manual installed providers.
@@ -39,10 +39,13 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
-- v2.11.5 - "" not '' tsk tsk
 
-- v2.11.4 - Fixed multiple scheduled executions.
-            added flock lock to cronjob
+- v2.11.12 -Fixed multiple scheduled executions.
+            added flock lock to ticker-control-plane.
+            
+            fixed cron line install again, again..... ended up reverting to old code.
+
+            added display script - will get more functions in the future.
 
 - v2.11.3
 	Fixed cron line mistake.
