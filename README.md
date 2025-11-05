@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.11.1
+# Akash Provider Paladin v2.11.3
 Paladin will help keep providers operational and safe.
 
 Paladin was tested on manual installed providers.
@@ -39,7 +39,10 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
-- V2.11.1 
+- v2.11.3
+	Fixed cron line mistake.
+
+- v2.11.1 
         Improved logging outputs from check provider bids.
 
 - v2.11.0
