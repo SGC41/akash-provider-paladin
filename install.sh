@@ -190,7 +190,7 @@ mkdir -p /var/log/akash-provider-paladin
 chown root:root /var/log/akash-provider-paladin
 chmod 755 /var/log/akash-provider-paladin
 echo "created paladin log folder"
-SCRIPT_PATH="/akash-provider-paladin/scripts/ticker-control-plane.sh"
+SCRIPT_PATH="/root/akash-provider-paladin/scripts/ticker-control-plane.sh"
 
 # Remove any existing cron jobs that reference this exact script
 
@@ -198,7 +198,8 @@ crontab -l 2>/dev/null \
   | grep -vF "$SCRIPT_PATH" \
   | crontab -
 
-CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && flock -n /tmp/ticker-control-plane.lock -c '/bin/bash /root/akash-provider-paladin/scripts/ticker-control-plane.sh >> /var/log/akash-provider-paladin/$(date +\%d).log 2>&1' && rm -f /tmp/control-plane.do"
+CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && flock -n /tmp/ticker-control-plane.lock -c '/bin/bash /root/akash-provider-paladin/scripts/ticker-control-plane.sh >> /var/log/akash-provider-paladin/\$(date +\%d).log 2>&1' && rm -f /tmp/control-plane.do"
+#CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && flock -n /tmp/ticker-control-plane.lock -c '/bin/bash $SCRIPT_PATH >> /var/log/akash-provider-paladin/\$(date +\%d).log 2>&1' && rm -f /tmp/control-plane.do"
 
  crontab -l 2>/dev/null  \
   | grep -vF "$SCRIPT_PATH" \
