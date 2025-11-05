@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Paladin v2.11.4
-# ticker-control-plane.sh v2.7.0
+# Paladin v2.11.8
+# ticker-control-plane.sh v2.8.0
 # Creator: SGC | DCnorse
 #
 # Similiar to ticker.sh but the version that runs on the control planes.
@@ -27,6 +27,10 @@
 # basic
 
 set -uo pipefail
+
+# Lock on FD 9 - makes sure ticker control plane doesn't run multiple times.
+exec 9>/tmp/ticker-control-plane.lock
+flock -n 9 || { echo "ticker-control-plane already running"; exit 0; }
 
 DO_FILE="/tmp/control-plane.do"
 DO_UPDATE_FILE="$HOME/akash-provider-paladin/.update.do"
