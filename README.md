@@ -39,6 +39,8 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.11.5 - "" not '' tsk tsk
+
 - v2.11.4 - Fixed multiple scheduled executions.
             added flock lock to cronjob
 
