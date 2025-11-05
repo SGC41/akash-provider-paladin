@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Paladin v2.6.3
-# ticker-control-plane.sh v2.6.3
+# Paladin v2.11.8
+# ticker-control-plane.sh v2.8.0
 # Creator: SGC | DCnorse
 #
 # Similiar to ticker.sh but the version that runs on the control planes.
@@ -27,6 +27,10 @@
 # basic
 
 set -uo pipefail
+
+# Lock on FD 9 - makes sure ticker control plane doesn't run multiple times.
+exec 9>/tmp/ticker-control-plane.lock
+flock -n 9 || { echo "ticker-control-plane already running"; exit 0; }
 
 DO_FILE="/tmp/control-plane.do"
 DO_UPDATE_FILE="$HOME/akash-provider-paladin/.update.do"
@@ -82,13 +86,15 @@ if [[ -f "$DO_FILE" ]]; then
     # Execute if allowed
     if [[ "$status" == "true" ]]; then
       if [[ -x "$script_path" ]]; then
-        echo "$(log_stamp) [log] [✓] Running $script_name → ${flags[*]}"
+        echo "$(log_stamp) [Info] [✓] Running $script_name → ${flags[*]}"
         "$script_path" "${flags[@]}"
       else
-        echo "$(log_stamp) [log] [✗] Script not found or not executable: $script_path" >&2
+        echo "$(log_stamp) [Warn] [✗] Script not found or not executable: $script_path" >&2
       fi
     fi
   done < "$DO_FILE"
 else
-  echo "$(log_stamp) [log] [!] No control file found at $DO_FILE — skipping."
+  echo "$(log_stamp) [Info] [!] No control file found at $DO_FILE — skipping."
 fi
+echo "$(log_stamp) [Info]  Scheduled Executions completed."
+echo ""
