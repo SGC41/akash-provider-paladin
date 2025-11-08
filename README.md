@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.11.12
+# Akash Provider Paladin v2.11.13
 Paladin will help keep providers operational and safe.
 
 Paladin was tested on manual installed providers.
@@ -39,6 +39,8 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.11.13 - Changed Check Provider Bids script, so that it won't constantly bounce the Provider Pod is there are low number of bids.
+             Added custom variable for the required Provider Pod age for a bounce... found in scripts/default.conf
 
 - v2.11.12 -Fixed multiple scheduled executions.
             added flock lock to ticker-control-plane.
