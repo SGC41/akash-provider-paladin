@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# clear-stuck-pods.sh v2.9.4
+# clear-stuck-pods.sh v2.11.13
 # ---------------------------------------
 # Scans all namespaces for pods stuck in
 # Terminating, Error, or Unknown states.
@@ -21,7 +21,7 @@ EXCLUDED_NAMESPACES=(
 
 # Pods to exclude (use namespace/podname format)
 EXCLUDED_PODS=(
-#  "akash-services/operator-inventory-hardware-discovery-*"
+  "akash-services/operator-inventory-hardware-discovery-*"
 #  "add-custom-pods-here"
 )
 

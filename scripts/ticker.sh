@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# v 2.11.0
+# v 2.11.13
 # Ticker is about the only thing that runs in the Paladin Pod
 # Akash Provider Paladin pod exists for cluster support and redundancy
 # It will choose which control plane are being by 
@@ -12,12 +12,13 @@
 
 set -uo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+#SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 CURRENT_PALADIN_VERSION="v2.11.x"
 BRANCH="stable"
 
 # Load defaults
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/default.conf"
 
 log_stamp() {
@@ -47,7 +48,7 @@ while true; do
 hour=$(date +%H)
 minute=$(date +%M)
 
-#Paladin Version check
+# hourly trigger - Paladin Version check 
   if [[ "$minute" == "00" ]]; then
 
 
@@ -56,6 +57,8 @@ minute=$(date +%M)
     echo "$(log_stamp) [log] - [skip] No version found in default.conf (expected CURRENT_PALADIN_VERSION, PALADIN_VERSION, or VERSION)"
 
     fi
+
+
 
   # ── Ensure we have a local clone of the repo ──
     REPO_DIR="/tmp/akash-provider-paladin"
@@ -89,20 +92,22 @@ minute=$(date +%M)
 
 #  if [[ "$minute" == "00" || "$minute" == "20" || "$minute" == "40" ]]; then
 # debug replacement line above
+
+  # ── Daily script trigger, to add stuff to daily put it in the script/daily.sh ──
   if [[ "$hour" == "03" && "$minute" == "00" ]]; then
     echo "$(log_stamp) [log] - [event] 3 AM local time check-daily.sh for control plane activated"
      echo "check-daily=true" >> /host/tmp/control-plane.do
      grep -q '^rpc-rotate=true' /host/tmp/control-plane.do 2>/dev/null || echo "rpc-rotate=true ; --check" >> /host/tmp/control-plane.do
   fi
 
-
+  # ── Provider pod restart check ──
   if [[ "$RESTARTS" -ge 3 ]]; then
     echo "$(log_stamp) [log] [event] - RPC Rotate Triggered sent"
     grep -q '^rpc-rotate=true' /host/tmp/control-plane.do 2>/dev/null || echo "rpc-rotate=true" >> /host/tmp/control-plane.do
     echo "$(log_stamp) [log] - should trigger within a  minutes on the host control-plane."
   fi
 
-  # ── Run stuck pod cleanup at ── 
+  # ── 15 minute triggers for control plane ── 
   if [[ "$minute" == "00" || "$minute" == "15" || "$minute" == "30" || "$minute" == "45" ]]; then
     echo "$(log_stamp) [log] - Stuck Pod Cleanup Triggered at minute $minute"
 #    "$SCRIPT_DIR/clear_stuck_pods.sh"

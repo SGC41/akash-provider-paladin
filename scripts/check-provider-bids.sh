@@ -3,21 +3,25 @@
 # Akash Provider Bid Watchdog v1.0
 # Scans for MsgCreateBid activity. Restarts provider pod if last bid is too old.
 
-set -euo pipefail
+set -uo pipefail
 
 # ── Config ─────────────────────────────────────────────────────
 LIMIT=100
 MAX_SKIP=3000
 SKIP=0
 MAX_MINUTES=(60*1)  # 🔁 Threshold for bid age before pod restart
-
+PROVIDER_POD_AGE_SECOND_RESTART_TRIGGER=(80*60)
 CONFIG_PATH="$HOME/akash-provider-paladin/provider.yaml"
 WALLET_ADDRESS=$(yq -r '.from' "$CONFIG_PATH")
+
+# Load Custom Configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/default.conf"
+
 
 log_stamp() {
   echo "[$(date -u +"%Y-%m-%d %H:%M:%S")]"
 }
-
 
 if [[ -z "$WALLET_ADDRESS" ]] || ! [[ "$WALLET_ADDRESS" =~ ^akash ]]; then
   echo "$(log_stamp) [Warn] Invalid wallet address"
@@ -26,6 +30,19 @@ fi
 
 NOW=$(date -u +%s)
 ALL_RESULTS="[]"
+
+PROVIDER_POD_CREATION_TIME=$(kubectl -n akash-services get pod akash-provider-0 \
+    -o jsonpath='{.metadata.creationTimestamp}')
+
+# Requires GNU date
+PROVIDER_POD_AGE_SECONDS=$(( $(date +%s) - $(date -d "$PROVIDER_POD_CREATION_TIME" +%s) ))
+
+# Provider age check - so that the script won't bounce the provider pod all the time.
+echo "$(log_stamp) [Info] Provider Pod age : '$PROVIDER_POD_AGE_SECONDS' seconds - Minimum age for provider bounce '$PROVIDER_POD_AGE_SECOND_RESTART_TRIGGER'"
+if [[ "$PROVIDER_POD_AGE_SECONDS" -le "$PROVIDER_POD_AGE_SECOND_RESTART_TRIGGER" ]]; then
+echo "$(log_stamp) [Info] Minimum Provider Pod age to low, Check Provider Bid script run aborted."
+exit 0
+fi
 
 # ── Scan Loop ──────────────────────────────────────────────────
 while [[ "$SKIP" -lt "$MAX_SKIP" ]]; do
