@@ -1,9 +1,8 @@
 #!/bin/bash
 #
-#  v2.9.5
-# reduced sleep during downtime to 5 seconds
-
-set -euo pipefail
+# script  v1.0.1
+# bumped last check delay to 30 sec so it, should show akash-provider 1/1
+set -uo pipefail
 
 DEFAULT_HOME="$HOME/akash-provider-paladin"
 CURRENT_DIR="$(pwd)"
@@ -41,7 +40,7 @@ sleep 3
 echo "Start Provider"
 kubectl -n akash-services scale statefulsets akash-provider --replicas=1
 
-sleep 15
+sleep 30
 echo "step to verify it's been started."
 kubectl -n akash-services get statefulsets && kubectl -n akash-services get pods -l app=akash-provide
 

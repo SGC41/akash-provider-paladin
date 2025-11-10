@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# clear-stuck-pods.sh v2.11.13
+# clear-stuck-pods.sh v2.11.14
 # ---------------------------------------
 # Scans all namespaces for pods stuck in
 # Terminating, Error, or Unknown states.
@@ -9,7 +9,7 @@
 # namespace and pod-level exclusions.
 # ---------------------------------------
 
-set -euo pipefail
+set -uo pipefail
 
 # ==== CONFIGURATION ===========================================================
 # Namespaces to exclude entirely (space-separated)

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# v2.9.6
+# v2.11.14
 # Commands added here will be installed on all control planes in the cluster, during paladin reinstall / upgrades
 
 sudo apt install wget jq -y
@@ -36,7 +36,7 @@ fi
 
 #log setup
 sudo mkdir -p /var/log/akash-provider-paladin
-sudo chown root:root /var/log/akash-provider-paladin
+sudo chown $USER:$USER /var/log/akash-provider-paladin
 sudo chmod 755 /var/log/akash-provider-paladin
 
 #Helm

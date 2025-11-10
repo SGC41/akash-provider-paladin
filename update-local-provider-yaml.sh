@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-#  v2.3.0
+#  v2.3.1
 
-set -euo pipefail
+set -uo pipefail
 
 PROVIDER_SRC="$HOME/akash-provider-paladin/provider.yaml"
 PRICE_SCRIPT_SRC="$HOME/akash-provider-paladin/price_script_generic.sh"
