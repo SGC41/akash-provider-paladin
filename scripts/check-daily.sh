@@ -1,6 +1,6 @@
 #!/bin/bash
-set pipefail -euo
-# paladin v2.11.0
+set pipefail -uo
+# paladin v2.11.1
 #
 # This script will be called every night at 3AM local, by Paladin Pod.
 # It exists to clearly add various script that will run daily.

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Akash Provider Bid Watchdog v1.0
+# Akash Provider Bid Watchdog v1.1.0
 # Scans for MsgCreateBid activity. Restarts provider pod if last bid is too old.
 
 set -uo pipefail
@@ -40,7 +40,7 @@ PROVIDER_POD_AGE_SECONDS=$(( $(date +%s) - $(date -d "$PROVIDER_POD_CREATION_TIM
 # Provider age check - so that the script won't bounce the provider pod all the time.
 echo "$(log_stamp) [Info] Provider Pod age : '$PROVIDER_POD_AGE_SECONDS' seconds - Minimum age for provider bounce '$PROVIDER_POD_AGE_SECOND_RESTART_TRIGGER'"
 if [[ "$PROVIDER_POD_AGE_SECONDS" -le "$PROVIDER_POD_AGE_SECOND_RESTART_TRIGGER" ]]; then
-echo "$(log_stamp) [Info] Minimum Provider Pod age to low, Check Provider Bid script run aborted."
+echo "$(log_stamp) [Info] Provider Pod has recently been re/started, Check Provider Bid script run not required skipping."
 exit 0
 fi
 

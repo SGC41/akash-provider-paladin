@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.11.13
+# Akash Provider Paladin v2.11.14
 Paladin will help keep providers operational and safe.
 
 Paladin was tested on manual installed providers.
@@ -39,6 +39,8 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.11.14 - User issues
+
 - v2.11.13 - Changed Check Provider Bids script, so that it won't constantly bounce the Provider Pod is there are low number of bids.
              Added custom variable for the required Provider Pod age for a bounce... found in scripts/default.conf
 
@@ -213,13 +215,6 @@ Again shouldn't really be needed
 Paladin Pod Start Up
 ```
  kubectl -n akash-services scale statefulsets akash-provider-paladin --replicas=1
-```
-
-
-Uninstall Paladin v1
-
-```shell
-curl -fsSL https://raw.githubusercontent.com/SGC41/akash-provider-paladin/stable/uninstall-v1.sh | bash
 ```
 
 Check its logs for details on what the pod is doing.

@@ -23,7 +23,7 @@
 
 # Wallet addresses
 
-set -euo pipefail
+set -uo pipefail
 
 CONFIG="$HOME/akash-provider-paladin/provider.yaml"
 PROVIDER_WALLET=$(yq -r '.from' "$CONFIG")
