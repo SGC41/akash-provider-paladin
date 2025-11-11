@@ -3,7 +3,7 @@ set -uo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.11.14
+# v2.11.20
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 TARGET_DIR="$HOME/akash-provider-paladin"
@@ -190,38 +190,64 @@ mkdir -p /var/log/akash-provider-paladin
 sudo chown "$USER":"$USER" /var/log/akash-provider-paladin
 sudo chmod 755 /var/log/akash-provider-paladin
 echo "created paladin log folder"
+
 SCRIPT_PATH="$HOME/akash-provider-paladin/scripts/ticker-control-plane.sh"
 
-# Remove any existing cron jobs that reference this exact script
+# Remove any existing entries for this script
+crontab -l 2>/dev/null | grep -vF "$SCRIPT_PATH" > /tmp/current.cron || true
 
-crontab -l 2>/dev/null \
-  | grep -vF "$SCRIPT_PATH" \
-  | crontab -
+# Append the new line with proper escaping (variable expands now; % is escaped for cron)
+printf '*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash "%s" >> /var/log/akash-provider-paladin/$(date +\\%%d).log 2>&1 && rm -f /tmp/control-plane.do\n' "$SCRIPT_PATH" >> /tmp/current.cron
 
-#CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && flock -n /tmp/ticker-control-plane.lock -c '/bin/bash /$USER/akash-provider-paladin/scripts/ticker-control-plane.sh >> /var/log/akash-provider-paladin/\$(date +\%d).log 2>&1' && rm -f /tmp/control-plane.do"
-#CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && flock -n /tmp/ticker-control-plane.lock -c '/bin/bash $SCRIPT_PATH >> /var/log/akash-provider-paladin/\$(date +\%d).log 2>&1' && rm -f /tmp/control-plane.do"
-#CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && \"/bin/bash $SCRIPT_PATH >> /var/log/akash-provider-paladin/\\\$(date +\\\%d).log 2>&1\" && rm -f /tmp/control-plane.do"
-CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash $SCRIPT_PATH >> /var/log/akash-provider-paladin/\\\$(date +\\\%d).log 2>&1 && rm -f /tmp/control-plane.do"
-
-( crontab -l 2>/dev/null | grep -vF "$SCRIPT_PATH" ; echo "$CRONLINE" ) | crontab -
-
-# crontab -l 2>/dev/null  \
-#  | grep -vF "$SCRIPT_PATH" \
-#  | { cat; echo "$CRONLINE"; } \
-#  | crontab -
-
-
-#CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash \"$HOME/akash-provider-paladin/scripts/ticker-control-plane.sh\" >> \"/var/log/akash-provider-paladin/\$(date +\\%d).log\" 2>&1 && rm -f /tmp/control-plane.do"
+crontab /tmp/current.cron
+rm -f /tmp/current.cron
 #
-##CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash "$HOME/akash-provider-paladin/scripts/ticker-control-plane.sh" >> "/var/log/akash-provider-paladin/$(date +\%d)-this-month.log" 2>&1 && rm -f /tmp/control-plane.do"
-#SCRIPT_PATH="akash-provider-paladin"
-
-# Remove any existing cron jobs that reference the script (regardless of timing)
-#( crontab -l 2>/dev/null || true ) | grep -v "$SCRIPT_PATH" | { cat; echo "$CRONLINE"; } | crontab -
-
-#crontab -l 2>/dev/null | grep -v "$SCRIPT_PATH" | { cat; echo "$CRONLINE"; } | crontab -
-
-# ───────────────────────────────────────────────────────
+#
+#SCRIPT_PATH="$HOME/akash-provider-paladin/scripts/ticker-control-plane.sh"
+#
+## Remove existing entries for this script
+#crontab -l 2>/dev/null | grep -vF "$SCRIPT_PATH" > /tmp/current.cron || true
+#
+## Append the new line (variable expands now; date stays escaped)
+#cat >> /tmp/current.cron <<CRON
+#*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash "$SCRIPT_PATH" >> /var/log/akash-provider-paladin/\$(date +\%d).log 2>&1 && rm -f /tmp/control-plane.do
+#CRON
+#
+#crontab /tmp/current.cron
+#rm -f /tmp/current.cron
+#
+##SCRIPT_PATH="$HOME/akash-provider-paladin/scripts/ticker-control-plane.sh"
+##
+### Remove any existing cron jobs that reference this exact script
+##
+##crontab -l 2>/dev/null \
+##  | grep -vF "$SCRIPT_PATH" \
+##  | crontab -
+##
+###CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && flock -n /tmp/ticker-control-plane.lock -c '/bin/bash /$USER/akash-provider-paladin/scripts/ticker-control-plane.sh >> /var/log/akash-provider-paladin/\$(date +\%d).log 2>&1' && rm -f /tmp/control-plane.do"
+###CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && flock -n /tmp/ticker-control-plane.lock -c '/bin/bash $SCRIPT_PATH >> /var/log/akash-provider-paladin/\$(date +\%d).log 2>&1' && rm -f /tmp/control-plane.do"
+###CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && \"/bin/bash $SCRIPT_PATH >> /var/log/akash-provider-paladin/\\\$(date +\\\%d).log 2>&1\" && rm -f /tmp/control-plane.do"
+##CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash \"$SCRIPT_PATH"\ >> /var/log/akash-provider-paladin/\\\$(date +\\\%d).log 2>&1 && rm -f /tmp/control-plane.do"
+##
+##( crontab -l 2>/dev/null | grep -vF "$SCRIPT_PATH" ; echo "$CRONLINE" ) | crontab -
+##
+### crontab -l 2>/dev/null  \
+###  | grep -vF "$SCRIPT_PATH" \
+###  | { cat; echo "$CRONLINE"; } \
+###  | crontab -
+##
+##
+###CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash \"$HOME/akash-provider-paladin/scripts/ticker-control-plane.sh\" >> \"/var/log/akash-provider-paladin/\$(date +\\%d).log\" 2>&1 && rm -f /tmp/control-plane.do"
+###
+####CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash "$HOME/akash-provider-paladin/scripts/ticker-control-plane.sh" >> "/var/log/akash-provider-paladin/$(date +\%d)-this-month.log" 2>&1 && rm -f /tmp/control-plane.do"
+###SCRIPT_PATH="akash-provider-paladin"
+##
+### Remove any existing cron jobs that reference the script (regardless of timing)
+###( crontab -l 2>/dev/null || true ) | grep -v "$SCRIPT_PATH" | { cat; echo "$CRONLINE"; } | crontab -
+##
+###crontab -l 2>/dev/null | grep -v "$SCRIPT_PATH" | { cat; echo "$CRONLINE"; } | crontab -
+##
+### ───────────────────────────────────────────────────────
 
 
 # Discover current node reliably

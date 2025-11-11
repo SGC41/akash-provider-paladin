@@ -1,4 +1,4 @@
-# Akash Provider Paladin v2.11.14
+# Akash Provider Paladin v2.11.20
 Paladin will help keep providers operational and safe.
 
 Paladin was tested on manual installed providers.
@@ -39,6 +39,8 @@ helm uninstall akash-provider-paladin -n akash-services
 
 
 Paladin will help keep providers operational.
+- v2.11.20 - More fun with cron, custom username should now work for single control plane providers.
+
 - v2.11.14 - User issues
 
 - v2.11.13 - Changed Check Provider Bids script, so that it won't constantly bounce the Provider Pod is there are low number of bids.
