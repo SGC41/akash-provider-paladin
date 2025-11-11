@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# rpc-rotate.sh v2.7.5
+# rpc-rotate.sh v2.11.21
 set -uo pipefail
 export ETCDCTL_API=3
 
@@ -51,6 +51,10 @@ LOCAL_NS="akash-services"
 LOCAL_ALIAS="http://localhost:26657"
 NODE=$(hostname -s)
 
+CA=""
+CERT=""
+KEY=""
+ETCD_FLAGS=""
 CA="/etc/ssl/etcd/ssl/ca.pem"
 CERT="/etc/ssl/etcd/ssl/node-${NODE}.pem"
 KEY="/etc/ssl/etcd/ssl/node-${NODE}-key.pem"
@@ -93,9 +97,9 @@ fetch_and_prep()
  {
      mkdir -p "$PALADIN_HOME"
   if ! $DEBUG; then
-    etcdctl $ETCD_FLAGS get /akash-provider-paladin/provider.yaml \
+    [[ $CLUSTER == TRUE ]] && etcdctl $ETCD_FLAGS get /akash-provider-paladin/provider.yaml \
       --print-value-only > "$CFG"
-    etcdctl $ETCD_FLAGS get /akash-provider-paladin/price_script_generic.sh \
+    [[ $CLUSTER == TRUE ]] && etcdctl $ETCD_FLAGS get /akash-provider-paladin/price_script_generic.sh \
       --print-value-only > "$PRICE"
     chmod +x "$PRICE"
   else
@@ -209,8 +213,8 @@ rotate_rpc() {
 # debug switch 2
     if ! $DEBUG; then
       "$HOME/akash-provider-paladin/update-provider-configuration.sh"
-      etcdctl $ETCD_FLAGS put /akash-provider-paladin/provider.yaml < "$CFG"
-      etcdctl $ETCD_FLAGS put /akash-provider-paladin/price_script_generic.sh < "$PRICE"
+      [[ $CLUSTER == TRUE ]] && etcdctl $ETCD_FLAGS put /akash-provider-paladin/provider.yaml < "$CFG"
+      [[ $CLUSTER == TRUE ]] && etcdctl $ETCD_FLAGS put /akash-provider-paladin/price_script_generic.sh < "$PRICE"
     else
       echo "$(log_stamp)[rpc] --debug: skipped apply to etcd & provider"
     fi

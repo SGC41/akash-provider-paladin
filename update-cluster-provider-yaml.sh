@@ -2,7 +2,11 @@
 set -uo pipefail
 
 export ETCDCTL_API=3
-
+source "$HOME/akash-provider-paladin/scripts/default.conf"
+if [[ $CLUSTER != TRUE ]]; then 
+  echo "This script is for HA cluster control planes only"
+  exit 0
+fi
 # ───────────────────────────────────────────────────────
 # Paths to user-edited files
 # ───────────────────────────────────────────────────────

@@ -3,24 +3,41 @@ set -uo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.11.20
+# v2.11.21
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 TARGET_DIR="$HOME/akash-provider-paladin"
 MANIFEST_TEMPLATE="$TARGET_DIR/install/install-cp-pod-template.yaml"
 TMP_MANIFEST="/tmp/secondary-cp-install.yaml"
 
-# ── Dynamic etcd cert detection ──────────────────────────────
-NODE_SHORT=$(hostname -s)
-ETCD_CACERT="/etc/ssl/etcd/ssl/ca.pem"
-ETCD_CERT="/etc/ssl/etcd/ssl/node-${NODE_SHORT}.pem"
-ETCD_KEY="/etc/ssl/etcd/ssl/node-${NODE_SHORT}-key.pem"
+CP_COUNT=$(kubectl get nodes -l node-role.kubernetes.io/control-plane= -o name | wc -l)
 
-for f in "$ETCD_CACERT" "$ETCD_CERT" "$ETCD_KEY"; do
-  [[ -r "$f" ]] || { echo "❌ Cannot read etcd file: $f" >&2; exit 1; }
-done
-PROVIDER_SRC="$HOME/provider/provider.yaml"
-PRICE_SCRIPT_SRC="$HOME/provider/price_script_generic.sh"
+if [ "$CP_COUNT" -gt 2 ]; then
+  CLUSTER=TRUE
+else
+  CLUSTER=FALSE
+fi
+
+echo "Control plane nodes: $CP_COUNT"
+echo "HA Cluster control planes detected setting CLUSTER=$CLUSTER"
+
+if [[ $CLUSTER == TRUE ]]; then
+
+  # ── Dynamic etcd cert detection ──────────────────────────────
+  NODE_SHORT=$(hostname -s)
+  ETCD_CACERT="/etc/ssl/etcd/ssl/ca.pem"
+  ETCD_CERT="/etc/ssl/etcd/ssl/node-${NODE_SHORT}.pem"
+  ETCD_KEY="/etc/ssl/etcd/ssl/node-${NODE_SHORT}-key.pem"
+
+  for f in "$ETCD_CACERT" "$ETCD_CERT" "$ETCD_KEY"; do
+    [[ -r "$f" ]] || { echo "❌ Cannot read etcd file: $f" >&2; continue; }
+  done
+fi
+
+
+PROVIDER_SRC=$(find . -path "*akash-provider-paladin*" -prune -o -name 'provider.yaml' -exec realpath {} \;)
+"
+PRICE_SCRIPT_SRC=$(find . -path "*akash-provider-paladin*" -prune -o -name 'price_script_generic.yaml' -exec realpath {} \;)
 
 #BRANCH flags
 
@@ -70,61 +87,70 @@ echo "📌 Working directory: $(pwd)"
 #Load configurations - had to come after repo clone.
 source $HOME/akash-provider-paladin/scripts/default.conf
 
+if [[ $CLUSTER == TRUE ]]; then
+  echo "CLUSTER=TRUE" >> "$HOME/akash-provider-paladin/scripts/default.conf"
 
-# Dynamically select etcd certs based on node shortname
-NODE_SHORTNAME=$(hostname -s)
+  # Dynamically select etcd certs based on node shortname
+  NODE_SHORTNAME=$(hostname -s)
 
-ETCD_CERT="/etc/ssl/etcd/ssl/node-${NODE_SHORTNAME}.pem"
-ETCD_KEY="/etc/ssl/etcd/ssl/node-${NODE_SHORTNAME}-key.pem"
-ETCD_CACERT="/etc/ssl/etcd/ssl/ca.pem"
+  ETCD_CERT="/etc/ssl/etcd/ssl/node-${NODE_SHORTNAME}.pem"
+  ETCD_KEY="/etc/ssl/etcd/ssl/node-${NODE_SHORTNAME}-key.pem"
+  ETCD_CACERT="/etc/ssl/etcd/ssl/ca.pem"
 
-# Verify certs exist before proceeding
-for FILE in "$ETCD_CERT" "$ETCD_KEY" "$ETCD_CACERT"; do
-  [[ -f "$FILE" ]] || { echo "❌ Missing required etcd cert/key: $FILE"; exit 1; }
-done
+  # Verify certs exist before proceeding
+  for FILE in "$ETCD_CERT" "$ETCD_KEY" "$ETCD_CACERT"; do
+    [[ -f "$FILE" ]] || { echo "❌ Missing required etcd cert/key: $FILE"; continue; }
+  done
+
+fi
 
 
 
 [[ -f "$PROVIDER_SRC" ]] || { echo "❌ Missing file: $PROVIDER_SRC"; exit 1; }
 [[ -f "$PRICE_SCRIPT_SRC" ]] || { echo "❌ Missing file: $PRICE_SCRIPT_SRC"; exit 1; }
 
+#cluster segment start
 
-# ───────────────────────────────────────────────────────
-# Check for existing config in etcd and act accordingly
-# ───────────────────────────────────────────────────────
+if [[ $CLUSTER == TRUE ]]; then
+  # ───────────────────────────────────────────────────────
+  # Check for existing config in etcd and act accordingly
+  # ───────────────────────────────────────────────────────
 
-KEY="/akash-provider-paladin/provider.yaml"
+  KEY="/akash-provider-paladin/provider.yaml"
 
-# Try to fetch the key’s value (silencing stderr)
-value=$(etcdctl get "$KEY" \
-  --cacert="$ETCD_CACERT" \
-  --cert="$ETCD_CERT" \
-  --key="$ETCD_KEY" 2>/dev/null)
+  # Try to fetch the key’s value (silencing stderr)
+  value=$(etcdctl get "$KEY" \
+    --cacert="$ETCD_CACERT" \
+    --cert="$ETCD_CERT" \
+    --key="$ETCD_KEY" 2>/dev/null)
 
-if [[ -n "$value" ]]; then
-  echo "✅ Key exists in etcd at $KEY, pulling it to akash-provider-paladin folder"
-  cd $HOME/akash-provider-paladin
-  echo "📂 Now in: $(pwd)"
-  ls -1
+  if [[ -n "$value" ]]; then
+    echo "✅ Key exists in etcd at $KEY, pulling it to akash-provider-paladin folder"
+    cd $HOME/akash-provider-paladin
+    echo "📂 Now in: $(pwd)"
+    ls -1
+
+    $HOME/akash-provider-paladin/update-local-provider-yaml.sh
+
+  else
+    echo "⚠️ Key not found in etcd at $KEY—pushing it now..."
+  
+    etcdctl put /akash-provider-paladin/provider.yaml \
+      --cacert="$ETCD_CACERT" \
+      --cert="$ETCD_CERT" \
+      --key="$ETCD_KEY" < "$PROVIDER_SRC"
+
+    etcdctl put /akash-provider-paladin/price_script_generic.sh \
+      --cacert="$ETCD_CACERT" \
+      --cert="$ETCD_CERT" \
+      --key="$ETCD_KEY" < "$PRICE_SCRIPT_SRC"
+
+  fi
 
   $HOME/akash-provider-paladin/update-local-provider-yaml.sh
 
-else
-  echo "⚠️ Key not found in etcd at $KEY—pushing it now..."
-  
-  etcdctl put /akash-provider-paladin/provider.yaml \
-    --cacert="$ETCD_CACERT" \
-    --cert="$ETCD_CERT" \
-    --key="$ETCD_KEY" < "$PROVIDER_SRC"
-
-  etcdctl put /akash-provider-paladin/price_script_generic.sh \
-    --cacert="$ETCD_CACERT" \
-    --cert="$ETCD_CERT" \
-    --key="$ETCD_KEY" < "$PRICE_SCRIPT_SRC"
-
 fi
-
-$HOME/akash-provider-paladin/update-local-provider-yaml.sh
+#cluster segment end
 
 # CONFIG points to provider.yaml in your env
 #CONFIG="$HOME/akash-provider-paladin/provider.yaml"
@@ -170,7 +196,7 @@ COLD_WALLET=$(yq -r '.paladin_cold_wallet // "NONE"' "$CONFIG" | tr -d '"')
               else
                   echo "paladin_cold_wallet: \"$USER_INPUT_CLEAN\"" >> "$CONFIG"
               fi
-              $HOME/akash-provider-paladin/update-cluster-provider-yaml.sh
+              [[ $CLUSTER == TRUE ]] && $HOME/akash-provider-paladin/update-cluster-provider-yaml.sh
               break
           else
               echo "Invalid Akash wallet address: $USER_INPUT_CLEAN"
@@ -281,42 +307,44 @@ helm upgrade --install akash-provider-paladin "$TARGET_DIR" \
 && kubectl delete pod akash-provider-paladin-0 -n akash-services \
 && echo "Paladin local install completed"
 
+if [[ $CLUSTER == TRUE ]]; then
 
-# ───────────────────────────────────────────────────────
-# Pre-deploy cleanup: remove any existing installer pods
-# ───────────────────────────────────────────────────────
+  # ───────────────────────────────────────────────────────
+  # Pre-deploy cleanup: remove any existing installer pods
+  # ───────────────────────────────────────────────────────
 
-echo "🧹 Cleaning up any Pending installer pods…"
-kubectl delete pods \
-  -n akash-services \
-  -l app=paladin-installer \
-  --ignore-not-found
+  echo "🧹 Cleaning up any Pending installer pods…"
+  kubectl delete pods \
+    -n akash-services \
+    -l app=paladin-installer \
+    --ignore-not-found
 
-# ───────────────────────────────────────────────────────
-# Deploy install pods to control-plane nodes (as before)
-# ───────────────────────────────────────────────────────
-echo "🛰 Deploying installer pods to each control plane…"
+  # ───────────────────────────────────────────────────────
+  # Deploy install pods to control-plane nodes (as before)
+  # ───────────────────────────────────────────────────────
+  echo "🛰 Deploying installer pods to each control plane…"
 
-# Fetch all control-plane nodes
-CONTROL_PLANES=$(kubectl get nodes \
-  -l node-role.kubernetes.io/control-plane \
-  -o custom-columns=NAME:.metadata.name --no-headers)
+  # Fetch all control-plane nodes
+  CONTROL_PLANES=$(kubectl get nodes \
+    -l node-role.kubernetes.io/control-plane \
+    -o custom-columns=NAME:.metadata.name --no-headers)
 
-# Apply installer to every other control-plane
-for NODE in $CONTROL_PLANES; do
-  if [[ "$NODE" == "$CURRENT_NODE" ]]; then
-    echo "🔁 Skipping self: $NODE"
-    continue
-  fi
+  # Apply installer to every other control-plane
+  for NODE in $CONTROL_PLANES; do
+    if [[ "$NODE" == "$CURRENT_NODE" ]]; then
+      echo "🔁 Skipping self: $NODE"
+      continue
+    fi
 
-  POD_NAME="install-secondary-cp-$NODE"
-  echo "📦 Deploying $POD_NAME on $NODE"
+    POD_NAME="install-secondary-cp-$NODE"
+    echo "📦 Deploying $POD_NAME on $NODE"
 
-  sed -e "s|<NODE_NAME>|$NODE|g" \
-      -e "s|install-secondary-cp-<NODE_NAME>|$POD_NAME|g" \
-      "$MANIFEST_TEMPLATE" > "$TMP_MANIFEST"
+    sed -e "s|<NODE_NAME>|$NODE|g" \
+        -e "s|install-secondary-cp-<NODE_NAME>|$POD_NAME|g" \
+        "$MANIFEST_TEMPLATE" > "$TMP_MANIFEST"
 
-  kubectl apply -f "$TMP_MANIFEST"
-done
+    kubectl apply -f "$TMP_MANIFEST"
+  done
 
-echo "✅ All installer pods launched in akash-services namespace."
+  echo "✅ All installer pods launched in akash-services namespace."
+fi

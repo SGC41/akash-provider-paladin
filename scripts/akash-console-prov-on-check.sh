@@ -1,5 +1,5 @@
 #!/bin/bash
-# v2.9.3
+# v2.11.21
 # Simple Description of funtions
 #
 # changed from 1hr to 16 minutes, and will change checks from 30 to 20.
