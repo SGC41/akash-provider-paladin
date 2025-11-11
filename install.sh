@@ -3,7 +3,7 @@ set -uo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.11.14
+# v2.11.15
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 TARGET_DIR="$HOME/akash-provider-paladin"
@@ -201,7 +201,7 @@ crontab -l 2>/dev/null \
 #CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && flock -n /tmp/ticker-control-plane.lock -c '/bin/bash /$USER/akash-provider-paladin/scripts/ticker-control-plane.sh >> /var/log/akash-provider-paladin/\$(date +\%d).log 2>&1' && rm -f /tmp/control-plane.do"
 #CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && flock -n /tmp/ticker-control-plane.lock -c '/bin/bash $SCRIPT_PATH >> /var/log/akash-provider-paladin/\$(date +\%d).log 2>&1' && rm -f /tmp/control-plane.do"
 #CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && \"/bin/bash $SCRIPT_PATH >> /var/log/akash-provider-paladin/\\\$(date +\\\%d).log 2>&1\" && rm -f /tmp/control-plane.do"
-CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash $SCRIPT_PATH >> /var/log/akash-provider-paladin/\\\$(date +\\\%d).log 2>&1 && rm -f /tmp/control-plane.do"
+CRONLINE="*/1 * * * * [ -f /tmp/control-plane.do ] && /bin/bash \"$SCRIPT_PATH"\ >> /var/log/akash-provider-paladin/\\\$(date +\\\%d).log 2>&1 && rm -f /tmp/control-plane.do"
 
 ( crontab -l 2>/dev/null | grep -vF "$SCRIPT_PATH" ; echo "$CRONLINE" ) | crontab -
 
