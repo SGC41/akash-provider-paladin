@@ -37,7 +37,7 @@ fi
 
 PROVIDER_SRC=$(find . -path "*akash-provider-paladin*" -prune -o -name 'provider.yaml' -exec realpath {} \;)
 
-PRICE_SCRIPT_SRC=$(find . -path "*akash-provider-paladin*" -prune -o -name 'price_script_generic.yaml' -exec realpath {} \;)
+PRICE_SCRIPT_SRC=$(find . -path "*akash-provider-paladin*" -prune -o -name 'price_script_generic.sh' -exec realpath {} \;)
 
 #BRANCH flags
 
