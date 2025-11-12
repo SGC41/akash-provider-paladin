@@ -3,7 +3,7 @@ set -uo pipefail
 
 # ───────────────────────────────────────────────────────
 # Akash Provider Paladin Installer — Control Plane Bootstrap
-# v2.11.21
+# v2.12.0
 # ───────────────────────────────────────────────────────
 REPO="https://github.com/SGC41/akash-provider-paladin.git"
 TARGET_DIR="$HOME/akash-provider-paladin"
@@ -36,7 +36,7 @@ fi
 
 
 PROVIDER_SRC=$(find . -path "*akash-provider-paladin*" -prune -o -name 'provider.yaml' -exec realpath {} \;)
-"
+
 PRICE_SCRIPT_SRC=$(find . -path "*akash-provider-paladin*" -prune -o -name 'price_script_generic.yaml' -exec realpath {} \;)
 
 #BRANCH flags
