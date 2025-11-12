@@ -34,10 +34,46 @@ if [[ $CLUSTER == TRUE ]]; then
   done
 fi
 
+# Collect matches into an array
+PROVIDER_YAML_SRC_matches=($(find / -path "*/akash-provider-paladin*" -prune -o -name 'provider.yaml' -exec realpath {} \;))
 
-PROVIDER_SRC=$(find . -path "*akash-provider-paladin*" -prune -o -name 'provider.yaml' -exec realpath {} \;)
+if [ ${#PROVIDER_YAML_SRC_matches[@]} -eq 0 ]; then
+  echo "❌ No provider.yaml found"
+elif [ ${#PROVIDER_YAML_SRC_matches[@]} -eq 1 ]; then
+  PROVIDER_SRC="${PROVIDER_YAML_SRC_matches[0]}"
+else
+  echo "Multiple provider.yaml files found:"
+  select choice in "${PROVIDER_YAML_SRC_matches[@]}"; do
+    PROVIDER_SRC="$choice"
+    break
+  done
+fi
 
-PRICE_SCRIPT_SRC=$(find . -path "*akash-provider-paladin*" -prune -o -name 'price_script_generic.sh' -exec realpath {} \;)
+echo "Using PROVIDER_SRC=$PROVIDER_SRC"
+
+#price_script_check
+PRICE_SCRIPT_SRC_matches=($(find / -path "*/akash-provider-paladin*" -prune -o -name 'price_script_generic.sh' -exec realpath {} \;))
+
+if [ ${#PRICE_SCRIPT_SRC_matches[@]} -eq 0 ]; then
+  echo "❌ No price_script_generic.sh found"
+elif [ ${#PRICE_SCRIPT_SRC_matches[@]} -eq 1 ]; then
+  PRICE_SCRIPT_SRC="${PRICE_SCRIPT_SRC_matches[0]}"
+else
+  echo "Multiple price_script_generic.sh files found:"
+  select choice in "${PRICE_SCRIPT_SRC_matches[@]}"; do
+    PRICE_SCRIPT_SRC="$choice"
+    break
+  done
+fi
+
+echo "Using PRICE_SCRIPT_SRC=$PRICE_SCRIPT_SRC"
+
+
+
+
+#PROVIDER_SRC=$(find . -path "*akash-provider-paladin*" -prune -o -name 'provider.yaml' -exec realpath {} \;)
+
+#PRICE_SCRIPT_SRC=$(find . -path "*akash-provider-paladin*" -prune -o -name 'price_script_generic.sh' -exec realpath {} \;)
 
 #BRANCH flags
 
