@@ -1,8 +1,15 @@
 #!/bin/bash
 #
-#  v2.3.1
+#  v2.11.21
 
 set -uo pipefail
+
+source "$HOME/akash-provider-paladin/scripts/default.conf"
+if [[ $CLUSTER != TRUE ]]; then
+  echo "This script is for HA cluster control planes only"
+  exit 0
+fi
+
 
 PROVIDER_SRC="$HOME/akash-provider-paladin/provider.yaml"
 PRICE_SCRIPT_SRC="$HOME/akash-provider-paladin/price_script_generic.sh"
